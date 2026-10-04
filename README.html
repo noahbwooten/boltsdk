@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolt SDK 10</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="README.html">Bolt SDK</a><a href="docs/index.html">Documentation</a><a href="docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="bolt-sdk-10">Bolt SDK 10</h1>
+<p><strong>For development and evaluation purposes only.</strong> (c) Noah Wooten 2023-2026, All Rights Reserved.</p>
+<p>Everything needed to write applications for BoltOS: the headers and libraries of the Bolt API, the tools that build, package and install an application, a BoltOS machine to run it on, two example applications, and the documentation. It targets <strong>BoltOS 2.0 Build 415.0.sdkv10</strong>, the system on the disk in <code>image/</code>, and any later system that provides SDK 10 or newer.</p>
+<p>The folder is self-contained. Unzip it anywhere; nothing in it refers to anything outside it but the tools below.</p>
+<h2 id="what-you-need">What you need</h2>
+<table>
+<tr><th></th><th></th></tr>
+<tr><td><strong>Python</strong> 3.8 or newer</td><td>runs the build and every tool</td></tr>
+<tr><td><strong>clang and lld</strong> 18 or newer</td><td>compile and link; or put them in <code>toolchain/</code></td></tr>
+<tr><td><strong>QEMU</strong></td><td>runs the machine, and brings its own UEFI firmware</td></tr>
+</table>
+<p><a href="docs/setup.html">docs/setup.md</a> has the packages for Windows, Debian and macOS.</p>
+<h2 id="in-five-minutes">In five minutes</h2>
+<pre><code>build.cmd examples\calc          ./build.sh examples/calc
+run.cmd examples\calc            ./run.sh examples/calc</code></pre>
+<p>The first builds the calculator into <code>examples/calc/out/debug/sdkcalc.bxf</code>. The second puts it on the machine's disk and starts the machine in a window: open <strong>Actions</strong>, and <strong>SDK Calculator</strong> is at the top. Close the window to stop it.</p>
+<p>To start an application of your own, copy <code>examples/empty</code> to a folder of your own, change the <code>[application]</code> section of its <code>app.ini</code>, and build that. <a href="docs/guide/getting-started.html">Getting started</a> walks through it.</p>
+<h2 id="what-is-here">What is here</h2>
+<table>
+<tr><th></th><th></th></tr>
+<tr><td><code>build.cmd</code>, <code>build.sh</code></td><td>build a project: <code>build.cmd &lt;folder&gt; [--release] [--clean]</code></td></tr>
+<tr><td><code>run.cmd</code>, <code>run.sh</code></td><td>put applications and packages on the disk, and start the machine</td></tr>
+<tr><td><code>include/</code></td><td>the Bolt API's headers</td></tr>
+<tr><td><code>lib/</code></td><td>the import libraries, one per system module, and the <code>.def</code> each was made from</td></tr>
+<tr><td><code>tools/</code></td><td>the build, the packager, the disk tools and the machine runner, in Python</td></tr>
+<tr><td><code>toolchain/</code></td><td>empty: clang and lld go here when the SDK carries its own</td></tr>
+<tr><td><code>image/</code></td><td>the machine: <code>bootx64.efi</code>, the volume <code>fs.bin</code>, and a bootable ISO</td></tr>
+<tr><td><code>examples/calc</code></td><td>a complete application: controls, keyboard, an icon, a version, a package</td></tr>
+<tr><td><code>examples/empty</code></td><td>the least an application needs to run</td></tr>
+<tr><td><code>docs/</code></td><td>the guides and the API reference, in Markdown and HTML</td></tr>
+</table>
+<h2 id="documentation">Documentation</h2>
+<p>Open <a href="docs/index.html">docs/index.html</a> in a browser, or read the Markdown beside it.</p>
+<ul>
+<li><a href="docs/setup.html">Setting up</a></li>
+<li><a href="docs/guide/getting-started.html">Getting started</a></li>
+<li><a href="docs/guide/application-model.html">How an application runs</a></li>
+<li><a href="docs/guide/project-file.html">The project file</a></li>
+<li><a href="docs/guide/resources-and-versions.html">Resources and versions</a></li>
+<li><a href="docs/guide/packaging.html">Packaging</a></li>
+<li><a href="docs/guide/running.html">Running and debugging</a></li>
+<li><a href="docs/guide/compatibility.html">Compatibility</a></li>
+<li><a href="docs/api/index.html">API reference</a></li>
+</ul>
+<h2 id="the-promise">The promise</h2>
+<p>An application built against SDK 10 keeps running on every later BoltOS. A function in the Bolt API never changes its signature and is never removed; a change is a second, numbered copy beside the first, and an application chooses which SDK it is built against with <code>BOLTSDK_APIV</code>. <a href="docs/guide/compatibility.html">Compatibility</a> has the whole of it.</p>
+</main>
+</body>
+</html>
