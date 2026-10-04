@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="messages">Messages</h1>
+<p>What the system calls in an application, and what it tells it. These are not functions an application calls, so none of it is numbered: they are the application's own exports and the values passed to them, and they are frozen the same way. A message never changes its meaning, and a new one takes a new number.</p>
+<h2 id="the-applications-exports">The application's exports</h2>
+<table>
+<tr><th>Export</th><th></th><th>Called</th></tr>
+<tr><td><code>int __modmain(void* Reserved)</code></td><td>required</td><td>once, when the application starts</td></tr>
+<tr><td><code>WORDPTR __modres(unsigned long Index, unsigned long Query)</code></td><td>required</td><td>whenever the system asks what the module carries; see <a href="modres.html#what-a-module-describes">modres</a></td></tr>
+<tr><td><code>WORD64 __WindowProcedure2(HANDLE Window, WORD32 Message, WORD64 Param1, WORD64 Param2)</code></td><td>for a window</td><td>for everything that happens to one of its windows</td></tr>
+<tr><td><code>void __modhalt(void)</code></td><td>optional</td><td>once, as the application ends</td></tr>
+<tr><td><code>void __modclock(WORD32 Message)</code></td><td>optional</td><td>on the system's clock, below</td></tr>
+<tr><td><code>void __modopen(PSTR Path)</code></td><td>optional</td><td>after <code>__modmain</code>, with a document to open</td></tr>
+<tr><td><code>void __WindowProcedure(...)</code></td><td>the original contract</td><td>every frame, for a window; see below</td></tr>
+</table>
+<p>Each is declared <code>__declspec(dllexport)</code> and spelled exactly so: the system finds them by name.</p>
+<h2 id="__modclock">__modclock</h2>
+<pre><code>#define MODMSG_PAINT   0x00   /* every frame */
+#define MODMSG_1SEC    0x01   /* once a second */
+#define MODMSG_WIDGETS 0x02   /* every frame, after the windows */
+#define MODMSG_FBRSZ   0x06   /* the screen changed size */
+#define MODMSG_USRDEF1 0x03   /* reserved */
+#define MODMSG_USRDEF2 0x04   /* reserved */
+#define MODMSG_USRDEF3 0x05   /* reserved */</code></pre>
+<p>Sent to every running module, whether or not it has a window showing. <code>MODMSG_PAINT</code> is a frame tick and not a chance to draw: a message-driven window draws only in <code>MSG_PAINT</code>. A window that wants a tick of its own asks for one with <a href="wndmgr.html#wndmgr_settimer"><code>Wndmgr_SetTimer</code></a>.</p>
+<hr>
+<h2 id="window-messages">Window messages</h2>
+<p><code>wndproc2.h</code>. Sent to <code>__WindowProcedure2</code>, one at a time, from the window manager. Numbering starts at one; zero is not a message. Return zero unless a message says otherwise.</p>
+<h3 id="msg_init">MSG_INIT</h3>
+<p><code>0x01</code>. The window has just been made. Sent once, before the first paint. Build the window's controls here, and allocate what the window needs.</p>
+<h3 id="msg_kill">MSG_KILL</h3>
+<p><code>0x02</code>. Reserved. When it is sent, the application will be ended 250 ms later whatever it does.</p>
+<h3 id="msg_quit">MSG_QUIT</h3>
+<p><code>0x03</code>. The close button was pressed. Return zero to let the window close, non-zero to refuse — which an application with unsaved work does while it asks. A refusal should last only as long as the question. Take the window's controls down here (<a href="cmnctl2.html#cmnctl2_destroycontrols"><code>CmnCtl2_DestroyControls</code></a>).</p>
+<h3 id="msg_minimize">MSG_MINIMIZE</h3>
+<p><code>0x04</code>. Minimised. Stop drawing and give back anything expensive; the window is not being destroyed and its state must survive.</p>
+<h3 id="msg_restore">MSG_RESTORE</h3>
+<p><code>0x05</code>. Showing again after <code>MSG_MINIMIZE</code>. Always followed by a paint.</p>
+<h3 id="msg_paint">MSG_PAINT</h3>
+<p><code>0x06</code>. Draw. The only message during which drawing is valid: the primitives point at the window's surface for its duration. Drawing is in window coordinates — (0, 0) is the window's corner, the title bar takes the first <code>WNDMGR_TITLEH</code> rows. <code>Param1</code> is the damaged rectangle, packed as <code>MSG_MAKERECT</code>; in SDK 10 it is always the whole window.</p>
+<h3 id="msg_cursor">MSG_CURSOR</h3>
+<p><code>0x07</code>. The pointer moved. <code>Param1</code> is where, window-relative, packed as <code>MSG_MAKEPOINT</code>; <code>Param2</code> the buttons held, as <code>1 &lt;&lt; code</code>.</p>
+<h3 id="msg_keydown-msg_keyup">MSG_KEYDOWN, MSG_KEYUP</h3>
+<p><code>0x08</code>, <code>0x09</code>. A key or mouse button went down or came up; <code>Param1</code> is the key code (see <a href="user.html#keyboard-and-pointer">Keyboard and pointer</a>; the buttons are <code>MSGKEY_*</code>). One message per change, except that a key held for a second repeats, each repeat another <code>MSG_KEYDOWN</code> with <code>Param2</code> set to one.</p>
+<h3 id="msg_char">MSG_CHAR</h3>
+<p><code>0x0A</code>. A character was typed; <code>Param1</code> is the character. Separate from <code>MSG_KEYDOWN</code>, since shift and the repeat sit between a key and a character.</p>
+<h3 id="msg_focus-msg_blur">MSG_FOCUS, MSG_BLUR</h3>
+<p><code>0x0B</code>, <code>0x0C</code>. The window gained or lost the focus.</p>
+<h3 id="msg_timer">MSG_TIMER</h3>
+<p><code>0x0D</code>. A second has passed and the window is showing. <code>Param1</code> is the time, as <a href="user.html#user_getktime"><code>User_GetKTime</code></a> answers it.</p>
+<h3 id="msg_move">MSG_MOVE</h3>
+<p><code>0x0E</code>. Reserved.</p>
+<h3 id="msg_resize">MSG_RESIZE</h3>
+<p><code>0x0F</code>. About to be resized to the size in <code>Param1</code>, packed as <code>MSG_MAKEPOINT</code>. Zero accepts, non-zero refuses, so a window that ignores it accepts. The size has already been held to the window's limits, so lay out before returning.</p>
+<h3 id="msg_scroll">MSG_SCROLL</h3>
+<p><code>0x10</code>. The wheel turned while the window had the focus. <code>Param1</code> is the notch count, positive away from the user; <code>Param2</code> the pointer, packed as <code>MSG_MAKEPOINT</code>.</p>
+<h3 id="msg_interval">MSG_INTERVAL</h3>
+<p><code>0x11</code>. A timer from <a href="wndmgr.html#wndmgr_settimer"><code>Wndmgr_SetTimer</code></a> came due. <code>Param1</code> is its identifier, <code>Param2</code> the millisecond clock. Sent outside a paint: change state and invalidate, do not draw.</p>
+<h2 id="buttons">Buttons</h2>
+<pre><code>#define MSGKEY_LBUTTON  0x01
+#define MSGKEY_RBUTTON  0x02
+#define MSGKEY_MBUTTON  0x04
+#define MSGKEY_XBUTTON1 0x05
+#define MSGKEY_XBUTTON2 0x06</code></pre>
+<h2 id="packing">Packing</h2>
+<pre><code>MSG_MAKEPOINT(x, y)        MSG_POINTX(p)   MSG_POINTY(p)
+MSG_MAKERECT(x, y, w, h)   MSG_RECTX(r)    MSG_RECTY(r)
+                           MSG_RECTW(r)    MSG_RECTH(r)</code></pre>
+<p>Each field is sixteen bits.</p>
+<hr>
+<h2 id="the-original-window-contract">The original window contract</h2>
+<pre><code>__declspec(dllexport) void __WindowProcedure(WORD32 X, WORD32 Y, WORD32 W,
+    WORD32 H, WORD32 MouseX, WORD32 MouseY, BOOL LeftButton, WORD64 Reserved);</code></pre>
+<p>Called every frame for each of the application's windows, in screen coordinates, with the window's rectangle and the pointer, and expected to draw everything from scratch. The frame and the client background are drawn first. This is what the <a href="cmnctl.html">immediate-mode controls</a> are for. A module exporting both procedures is driven by <code>__WindowProcedure2</code>.</p>
+<hr>
+<h2 id="system-control-pages">System Control pages</h2>
+<p><code>scitem2.h</code>. An application can add a page to System Control by describing a <code>MODRES_RSRCTYPE_SCITEM2</code> resource whose procedure has the window procedure's shape, with a panel where the window would be:</p>
+<pre><code>WORD64 __ScItemProcedure2(HANDLE Panel, WORD32 Message, WORD64 Param1,
+                          WORD64 Param2);</code></pre>
+<p>Put the page's controls on the panel at <code>MSG_INIT</code>, and hand everything else to <a href="cmnctl2.html#cmnctl2_dispatch"><code>CmnCtl2_Dispatch</code></a>. A page lives in a module that may never have been started — System Control finds pages by loading every application without calling <code>__modmain</code> — so it allocates its own state at <code>MSG_INIT</code> and reads nothing its application set up. It also has three messages of its own:</p>
+<table>
+<tr><th></th><th></th><th></th></tr>
+<tr><td><code>SCMSG_SHOW</code></td><td>0x40</td><td>this page is now the one on screen</td></tr>
+<tr><td><code>SCMSG_HIDE</code></td><td>0x41</td><td>another page was chosen; keep everything</td></tr>
+<tr><td><code>SCMSG_RESIZE</code></td><td>0x42</td><td>the panel is the size in <code>Param1</code>, packed as <code>MSG_MAKEPOINT</code></td></tr>
+<tr><td><code>SCMSG_MINSIZE</code></td><td>0x43</td><td>answer the smallest size the page can lay out in, packed the same way; zero for no opinion</td></tr>
+</table>
+</main>
+</body>
+</html>

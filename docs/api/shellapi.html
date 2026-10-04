@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>shellapi.h — the shell</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="shellapih-the-shell">shellapi.h — the shell</h1>
+<p><code>#include &lt;shellapi.h&gt;</code> · exported by <strong>boltshell.dll</strong> (<code>/sys/core/shell.bxf</code>) · link <strong><code>boltshell.lib</code></strong></p>
+<p>What the shell offers an application: starting programs and opening files, message boxes, links, the icon and type name a file is shown with, and the original immediate-mode controls.</p>
+<hr>
+<h2 id="starting-things">Starting things</h2>
+<h3 id="shell_openfile">Shell_OpenFile</h3>
+<pre><code>BOOL Shell_OpenFile(PSTR Path);</code></pre>
+<p>boltshell.dll · export <code>Shell_OpenFile1</code> · SDK 10</p>
+<p>Opens a path the way a double click does: an application (<code>.bxf</code>) is started; a link (<code>.bal</code>) is followed; a folder opens a file explorer at it; a document goes to whatever reads it — <code>.txt</code> and <code>.log</code> to Notepad, <code>.zip</code> and <code>.tar</code> to the archive utility, <code>.bxi</code> to the installer. <strong>Returns</strong> <code>FALSE</code> when nothing opens it, which is the caller's to report.</p>
+<h3 id="shell_openfilewith">Shell_OpenFileWith</h3>
+<pre><code>BOOL Shell_OpenFileWith(PSTR AppPath, PSTR DocumentPath);</code></pre>
+<p>boltshell.dll · export <code>Shell_OpenFileWith1</code> · SDK 10</p>
+<p>Starts an application and hands it a document, for a caller that chooses the application itself. The document arrives through the application's <code>__modopen(PSTR Path)</code> export, called after <code>__modmain</code>; an application that does not export it is started with nothing open.</p>
+<h3 id="shell_executeex">Shell_ExecuteEx</h3>
+<pre><code>PVOID Shell_ExecuteEx(PSTR FilePath, PSHELL_LAUNCHINFO Opt_Info,
+                      PWORD16 Opt_OutModuleId);</code></pre>
+<p>boltshell.dll · export <code>Shell_ExecuteEx1</code> · SDK 10</p>
+<p>Loads an application and runs its entry point.</p>
+<ul>
+<li><code>Opt_Info</code> — how a window should look, for an application that opens none of its own; <code>NULL</code> lets the application decide.</li>
+<li><code>Opt_OutModuleId</code> — receives the new process's identifier.</li>
+<li><strong>Returns</strong> where it was loaded, or <code>NULL</code> when it could not be started. An application built for a newer Bolt SDK than the system provides is refused, and the shell tells the user why.</li>
+</ul>
+<pre><code>typedef struct _SHELL_LAUNCHINFO {
+    WORD32 X, Y, W, H;
+    char Title[64];         /* copied */
+    char IconName[32];      /* a picture the application carries */
+    WORD32 Flags;           /* WNDMGRHNDFLAGS_* */
+} SHELL_LAUNCHINFO;</code></pre>
+<h3 id="shell_execute">Shell_Execute</h3>
+<pre><code>PVOID Shell_Execute(char* FilePath, WORD16 ObjId, PVOID* NativeModule,
+                    WORD16* ModId);</code></pre>
+<p>boltshell.dll · export <code>Shell_Execute1</code> · SDK 10</p>
+<p>The older form of <a href="#shell_executeex"><code>Shell_ExecuteEx</code></a>. <code>ObjId</code> is not used, and <code>*NativeModule</code> is always set to <code>NULL</code>.</p>
+<hr>
+<h2 id="message-boxes">Message boxes</h2>
+<p>A message box is a window of its own and does not wait. It is <em>polled</em>: call it with the same title and message every frame — from a timer, or from a window procedure — and it answers <code>SHELL_MSGBOXRSLT_WAIT</code> until somebody presses a button, then the button's result, once, and the box is gone. Calling it again after that puts up a new one.</p>
+<pre><code>static BOOL Asking;
+
+case MSG_INTERVAL:
+    if (Asking) {
+        WORD32 Answer = Shell_MessageBox(&quot;My App&quot;, &quot;Save changes?&quot;,
+            SHELL_MSGBOXICON_QSTN, SHELL_MSGBOXBTN_YES | SHELL_MSGBOXBTN_NO);
+
+        if (Answer != SHELL_MSGBOXRSLT_WAIT) {
+            Asking = FALSE;
+            if (Answer == SHELL_MSGBOXRSLT_YES)
+                Save();
+        }
+    }
+    return 0;</code></pre>
+<p>Text wraps at 80 characters and at newlines.</p>
+<table>
+<tr><th>Icons</th><th>Buttons (or together)</th><th>Results</th></tr>
+<tr><td><code>SHELL_MSGBOXICON_NONE</code></td><td><code>SHELL_MSGBOXBTN_OK</code></td><td><code>SHELL_MSGBOXRSLT_WAIT</code></td></tr>
+<tr><td><code>SHELL_MSGBOXICON_INFO</code></td><td><code>SHELL_MSGBOXBTN_CANCEL</code></td><td><code>SHELL_MSGBOXRSLT_OK</code></td></tr>
+<tr><td><code>SHELL_MSGBOXICON_WARN</code></td><td><code>SHELL_MSGBOXBTN_RETRY</code></td><td><code>SHELL_MSGBOXRSLT_CANCEL</code></td></tr>
+<tr><td><code>SHELL_MSGBOXICON_EROR</code></td><td><code>SHELL_MSGBOXBTN_ABORT</code></td><td><code>SHELL_MSGBOXRSLT_RETRY</code></td></tr>
+<tr><td><code>SHELL_MSGBOXICON_CTCL</code></td><td><code>SHELL_MSGBOXBTN_FAIL</code></td><td><code>SHELL_MSGBOXRSLT_ABORT</code></td></tr>
+<tr><td><code>SHELL_MSGBOXICON_QSTN</code></td><td><code>SHELL_MSGBOXBTN_SAVE</code></td><td><code>SHELL_MSGBOXRSLT_FAIL</code></td></tr>
+<tr><td></td><td><code>SHELL_MSGBOXBTN_DONTSAVE</code></td><td><code>SHELL_MSGBOXRSLT_SAVE</code></td></tr>
+<tr><td></td><td><code>SHELL_MSGBOXBTN_YES</code></td><td><code>SHELL_MSGBOXRSLT_DONTSAVE</code></td></tr>
+<tr><td></td><td><code>SHELL_MSGBOXBTN_NO</code></td><td><code>SHELL_MSGBOXRSLT_YES</code>, <code>_NO</code></td></tr>
+</table>
+<p><code>SHELL_MSGBOXOPT_SILENT</code> with the buttons keeps the box from making its own sound, for an alert that is already sounding.</p>
+<h3 id="shell_messagebox">Shell_MessageBox</h3>
+<pre><code>WORD32 Shell_MessageBox(PSTR Title, PSTR Message, BYTE Image, WORD16 Options);</code></pre>
+<p>boltshell.dll · export <code>Shell_MessageBox1</code> · SDK 10</p>
+<p>Puts up a box, or answers for the one already up with this title and message. <code>Image</code> is a <code>SHELL_MSGBOXICON_*</code>; <code>Options</code> the buttons. <strong>Returns</strong> a <code>SHELL_MSGBOXRSLT_*</code>. A box closed some other way answers <code>SHELL_MSGBOXRSLT_CANCEL</code>.</p>
+<h3 id="shell_getmessageboxid">Shell_GetMessageBoxId</h3>
+<pre><code>WORD32 Shell_GetMessageBoxId(PSTR Title, PSTR Message);</code></pre>
+<p>boltshell.dll · export <code>Shell_GetMessageBoxId1</code> · SDK 10</p>
+<p>The identifier of the box up with this title and message, for <a href="#shell_getmessageboxstatus"><code>Shell_GetMessageBoxStatus</code></a>.</p>
+<h3 id="shell_getmessageboxstatus">Shell_GetMessageBoxStatus</h3>
+<pre><code>WORD32 Shell_GetMessageBoxStatus(WORD32 Id);</code></pre>
+<p>boltshell.dll · export <code>Shell_GetMessageBoxStatus1</code> · SDK 10</p>
+<p>A box's answer by identifier: <code>SHELL_MSGBOXRSLT_WAIT</code> until a button is pressed, then the button's result, once, and the box is gone — the same as asking <a href="#shell_messagebox"><code>Shell_MessageBox</code></a> again. An identifier for a box that has gone answers <code>SHELL_MSGBOXRSLT_WAIT</code>.</p>
+<hr>
+<h2 id="links">Links</h2>
+<p>A link (<code>.bal</code>) names a file, what it is called where it is shown, and the icon it is drawn with; opening one opens what it names. The Actions menu, the desktop and the startup folder are folders of links.</p>
+<pre><code>typedef struct _APPLINK {
+    WORD32 Magic;           /* APPLINK_MAGIC */
+    WORD32 Version;         /* APPLINK_VERSION */
+    char Name[64];          /* what it is called */
+    char Path[128];         /* what it opens */
+    char IconName[32];      /* a picture the target carries; empty for none */
+    char Arguments[128];    /* reserved */
+    WORD32 X, Y, W, H;      /* a window, for a target that opens none */
+    WORD32 WindowFlags;
+    WORD32 Flags;           /* reserved */
+    WORD32 Reserved[8];
+} APPLINK;</code></pre>
+<h3 id="shell_readapplink">Shell_ReadAppLink</h3>
+<pre><code>BOOL Shell_ReadAppLink(PSTR Path, PAPPLINK Out);</code></pre>
+<p>boltshell.dll · export <code>Shell_ReadAppLink1</code> · SDK 10</p>
+<p>Reads a link. A file that is short, or carries a magic or version this build does not know, reads as absent.</p>
+<h3 id="shell_writeapplink">Shell_WriteAppLink</h3>
+<pre><code>BOOL Shell_WriteAppLink(PSTR Path, PAPPLINK Link);</code></pre>
+<p>boltshell.dll · export <code>Shell_WriteAppLink1</code> · SDK 10</p>
+<p>Writes a link, filling in its magic and version. To put an application in the Actions menu, write one into <code>APPLINK_ACTIONS_PATH</code> (a folder in it is a submenu); on the desktop, into <code>FOLDER_DESKTOP</code>; to start it with the machine, into <code>FOLDER_STARTUP</code>.</p>
+<hr>
+<h2 id="how-a-file-is-shown">How a file is shown</h2>
+<h3 id="shell_iconnamefor">Shell_IconNameFor</h3>
+<pre><code>BOOL Shell_IconNameFor(PSTR Path, WORD32 Type, BOOL Empty, PSTR Out,
+                       WORD32 Size);</code></pre>
+<p>boltshell.dll · export <code>Shell_IconNameFor1</code> · SDK 10</p>
+<p>The name of the picture a path is drawn with, by what it is. <code>Type</code> is a <code>USER_FILETYPE_*</code>; <code>Empty</code> chooses between the two folder pictures. A link answers the icon it names, or its target's. <strong>Returns</strong> <code>FALSE</code> when nothing was decided.</p>
+<h3 id="shell_iconmodulefor">Shell_IconModuleFor</h3>
+<pre><code>BOOL Shell_IconModuleFor(PSTR Path, PSTR Out, WORD32 Size);</code></pre>
+<p>boltshell.dll · export <code>Shell_IconModuleFor1</code> · SDK 10</p>
+<p>For a link, the module that carries the picture its icon name means, to pass to <a href="wndmgr.html#wndmgr_loadiconfrom"><code>Wndmgr_LoadIconFrom</code></a>. <code>FALSE</code> means the shell's own.</p>
+<h3 id="shell_typenamefor">Shell_TypeNameFor</h3>
+<pre><code>BOOL Shell_TypeNameFor(PSTR Path, WORD32 Type, PSTR Out, WORD32 Size);</code></pre>
+<p>boltshell.dll · export <code>Shell_TypeNameFor1</code> · SDK 10</p>
+<p>What a path is called, as a person would say it: "Folder", "Text Document (.txt)", "TMP File (.tmp)" for an extension nothing knows.</p>
+<hr>
+<h2 id="windows">Windows</h2>
+<h3 id="shell_closewindow">Shell_CloseWindow</h3>
+<pre><code>void Shell_CloseWindow(HANDLE Window);</code></pre>
+<p>boltshell.dll · export <code>Shell_CloseWindow1</code> · SDK 10</p>
+<p>Closes a window, as <a href="wndmgr.html#wndmgr_closewindow"><code>Wndmgr_CloseWindow</code></a>.</p>
+<h3 id="shell_minimizewindow">Shell_MinimizeWindow</h3>
+<pre><code>void Shell_MinimizeWindow(HANDLE Window);</code></pre>
+<p>boltshell.dll · export <code>Shell_MinimizeWindow1</code> · SDK 10</p>
+<p>Minimises a window, as <a href="wndmgr.html#wndmgr_minimizewindow"><code>Wndmgr_MinimizeWindow</code></a>.</p>
+<h3 id="shell_bringforth">Shell_BringForth</h3>
+<pre><code>VOID Shell_BringForth(HANDLE Window);</code></pre>
+<p>boltshell.dll · export <code>Shell_BringForth1</code> · SDK 10</p>
+<p>Gives a window the focus, as <a href="wndmgr.html#wndmgr_bringforth"><code>Wndmgr_BringForth</code></a>.</p>
+<h3 id="shell_getcolors">Shell_GetColors</h3>
+<pre><code>PSHELL_COLORS Shell_GetColors(VOID);</code></pre>
+<p>boltshell.dll · export <code>Shell_GetColors1</code> · SDK 10</p>
+<p>The shell's palette, as a <code>SHELL_COLORS</code> the shell owns; the same colours as the window manager's, under the shell's names. Read, not written.</p>
+<h3 id="shell_getshellres">Shell_GetShellRes</h3>
+<pre><code>PKMCTL_SHELLRES Shell_GetShellRes(VOID);</code></pre>
+<p>boltshell.dll · export <code>Shell_GetShellRes1</code> · SDK 10</p>
+<p>The shell's resources as the system keeps them, as <a href="wndmgr.html#wndmgr_getshellres"><code>Wndmgr_GetShellRes</code></a>.</p>
+<h3 id="shell_setclips">Shell_SetClips</h3>
+<pre><code>VOID Shell_SetClips(WORD32 X, WORD32 Y, WORD32 W, WORD32 H);</code></pre>
+<p>boltshell.dll · export <code>Shell_SetClips1</code> · SDK 10</p>
+<p>The shell's form of <a href="wndmgr.html#wndmgr_setclips"><code>Wndmgr_SetClips</code></a>, for the immediate-mode controls below.</p>
+<h3 id="shell_getwindowdata">Shell_GetWindowData</h3>
+<pre><code>VOID Shell_GetWindowData(PWORD16 MouseX, PWORD16 MouseY, PBOOL LeftButton);</code></pre>
+<p>boltshell.dll · export <code>Shell_GetWindowData1</code> · SDK 10</p>
+<p>The pointer as the window the shell is drawing was handed it, for the immediate-mode controls below.</p>
+<hr>
+<h2 id="the-shells-immediate-mode-controls">The shell's immediate-mode controls</h2>
+<p>The shell's copy of the original controls, with the same contracts as their <code>CmnCtl_</code> namesakes in <a href="cmnctl.html">cmnctl.h</a>. New code uses the <a href="cmnctl2.html">retained controls</a>.</p>
+<h3 id="shellui_drawbutton">ShellUi_DrawButton</h3>
+<pre><code>BOOL ShellUi_DrawButton(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, char* Text);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawButton1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawbutton"><code>CmnCtl_DrawButton</code></a>.</p>
+<h3 id="shellui_drawcheckbox">ShellUi_DrawCheckbox</h3>
+<pre><code>BOOL ShellUi_DrawCheckbox(WORD32 X, WORD32 Y, PSTR Title, PBOOL State);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawCheckbox1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawcheckbox"><code>CmnCtl_DrawCheckbox</code></a>.</p>
+<h3 id="shellui_drawcombobox">ShellUi_DrawComboBox</h3>
+<pre><code>BOOL ShellUi_DrawComboBox(WORD32 X, WORD32 Y, WORD32 W, PSTR Title,
+                          WORD32 ElementCnt, PSTR* Elements, PWORD32 Selected,
+                          PBOOL IsOpen);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawComboBox1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawcombobox"><code>CmnCtl_DrawComboBox</code></a>.</p>
+<h3 id="shellui_drawtextinput">ShellUi_DrawTextInput</h3>
+<pre><code>VOID ShellUi_DrawTextInput(WORD32 X, WORD32 Y, WORD32 W, PSTR Text,
+                           PBOOL IsOpen, PWORD32 CursorPos);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawTextInput1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawtextinput"><code>CmnCtl_DrawTextInput</code></a>.</p>
+<h3 id="shellui_drawtextinputml">ShellUi_DrawTextInputML</h3>
+<pre><code>VOID ShellUi_DrawTextInputML(WORD32 X, WORD32 Y, WORD32 W, WORD32 Lines,
+                             PSTR Text, PWORD32 CursorX, PWORD32 CursorY,
+                             PBOOL IsInFocus, PSTR** RichCtx);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawTextInputML1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawtextinputml"><code>CmnCtl_DrawTextInputML</code></a>.</p>
+<h3 id="shellui_drawintinput">ShellUi_DrawIntInput</h3>
+<pre><code>BOOL ShellUi_DrawIntInput(WORD32 X, WORD32 Y, WORD32 W, INT Min, INT Max,
+                          PINT Value);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawIntInput1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawintinput"><code>CmnCtl_DrawIntInput</code></a>.</p>
+<h3 id="shellui_drawdropmenu">ShellUi_DrawDropMenu</h3>
+<pre><code>VOID ShellUi_DrawDropMenu(WORD32 X, WORD32 Y, WORD32 W, PSTR Name, PVOID Icon,
+                          PBOOL State, PVOID StateChangedCb);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawDropMenu1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawdropmenu"><code>CmnCtl_DrawDropMenu</code></a>.</p>
+<h3 id="shellui_drawdropitem">ShellUi_DrawDropItem</h3>
+<pre><code>VOID ShellUi_DrawDropItem(WORD32 X, WORD32 Y, WORD32 W, PSTR Name, PVOID Icon);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawDropItem1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawdropitem"><code>CmnCtl_DrawDropItem</code></a>.</p>
+<h3 id="shellui_drawdropitemselectable">ShellUi_DrawDropItemSelectable</h3>
+<pre><code>BOOL ShellUi_DrawDropItemSelectable(WORD32 X, WORD32 Y, WORD32 W, PSTR Name,
+                                    PVOID Icon, BOOL Selected);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawDropItemSelectable1</code> · SDK 10</p>
+<p>As <a href="cmnctl.html#cmnctl_drawdropitemselectable"><code>CmnCtl_DrawDropItemSelectable</code></a>.</p>
+<h3 id="shellui_createwindow">ShellUi_CreateWindow</h3>
+<pre><code>HANDLE ShellUi_CreateWindow(WORD32 X, WORD32 Y, WORD32 W, WORD32 H,
+                            char* Title, void* Icon16, WORD16 ObjId,
+                            void* Function);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_CreateWindow1</code> · SDK 10</p>
+<p>Makes a window handle carrying an immediate-mode procedure, <code>Function</code>, the way windows were made before the window manager owned them. The handle is not registered with the window manager and nothing draws it unless its maker does, with <a href="#shellui_drawwindow"><code>ShellUi_DrawWindow</code></a>. Kept for what was written against it; an application makes windows with <a href="wndmgr.html#wndmgr_createwindow"><code>Wndmgr_CreateWindow</code></a>.</p>
+<h3 id="shellui_drawwindow">ShellUi_DrawWindow</h3>
+<pre><code>void ShellUi_DrawWindow(HANDLE Window, BOOL WindowHasFocus);</code></pre>
+<p>boltshell.dll · export <code>ShellUi_DrawWindow1</code> · SDK 10</p>
+<p>Draws a window made by <a href="#shellui_createwindow"><code>ShellUi_CreateWindow</code></a> — its frame, title bar and procedure — at its position, kept on the screen.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resources and versions</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="resources-and-versions">Resources and versions</h1>
+<p>An application's file carries three things besides its code: the pictures and sounds it uses, a version manifest saying what it is, and a record of the SDK it was built for. All three are read out of the file without running it, which is how the Actions menu draws an application's icon and the file explorer shows its version before it has ever been started.</p>
+<h2 id="pictures-and-sounds">Pictures and sounds</h2>
+<p>Listed in <code>app.ini</code>, and attached to the file by the build after it links:</p>
+<pre><code>[resources]
+AppIcon_Hello = res/hello.bmp
+Picture_Logo  = res/logo.bmp, no-compress
+
+[sounds]
+Sound_Done = res/done.wav</code></pre>
+<p>The code asks for them by name:</p>
+<pre><code>PVOID Icon = Wndmgr_LoadIcon(&quot;AppIcon_Hello&quot;, 24);       /* 24 by 24 */
+
+WORD32 W, H;
+PVOID Logo = UserRes_LoadImage(NULL, &quot;Picture_Logo&quot;, &amp;W, &amp;H);
+Ge_DrawBuffer(20, 50, W, H, Logo);                      /* in MSG_PAINT */
+
+User_RegisterSound(&quot;Sound_Done&quot;);                       /* once */
+User_PlaySound(&quot;Sound_Done&quot;);</code></pre>
+<p><code>NULL</code> for the module means the application itself; a name it does not carry is then looked for in the shell, so the system's own pictures — the file type icons, the message box icons, <code>AppIcon_Placeholder</code> — can be used by name too. The pixels these hand back are the application's to free with <code>User_Free</code> when it no longer draws them; an icon given to a window must last as long as the window.</p>
+<p>Pictures are <code>.bmp</code> files, 24-bit or paletted, uncompressed, with magenta (255, 0, 255) as the transparent colour. Sounds are PCM <code>.wav</code> files.</p>
+<h3 id="the-application-icon">The application icon</h3>
+<p>An application's icon is a 32 by 32 picture whose name begins <code>AppIcon_</code>, named by <code>icon</code> in <code>[application]</code>. It is drawn at 32 in the Actions menu, at 24 in the title bar and on the taskbar, and by the installer. Without one, the system draws its placeholder.</p>
+<h2 id="the-manifest">The manifest</h2>
+<p><code>RSRCTYPE_MANIFEST</code> is the application's name and the name of its icon, handed out by <code>__modres</code>. The window takes its title and icon from it:</p>
+<pre><code>static RSRCTYPE_MANIFEST Manifest = {
+    BOLTAPP_NAME, BOLTAPP_ICON, 0
+};
+
+__declspec(dllexport) int __modmain(void* Reserved) {
+    Wndmgr_CreateWindow(100, 100, 360, 160, Manifest.Name,
+        Wndmgr_LoadIcon(Manifest.IconName, 24), 0);
+    return 0;
+}</code></pre>
+<h2 id="the-version-manifest">The version manifest</h2>
+<p>What the file is, in a section of its own so it can be read as bytes: description, version, product, copyright, language, and the name it was built under. The file explorer's Properties shows it.</p>
+<pre><code>#include &lt;modver.h&gt;
+
+MODVERSION_PLACE static const RSRCTYPE_VERSION Version = {
+    MODVERSION_HEADER,
+    BOLTAPP_DESCRIPTION,
+    MODVERSION_PRODUCT,
+    MODVERSION_COPYRIGHT,
+    MODVERSION_LANGUAGE,
+    BOLTAPP_FILENAME
+};</code></pre>
+<p>It must be returned from <code>__modres</code> as well, which is what stops the linker throwing it away — see either example. The build checks the linked file and refuses one whose manifest is missing, is the wrong shape, or gives a version or file name other than app.ini's.</p>
+<h2 id="boltapph">boltapp.h</h2>
+<p>The <code>BOLTAPP_*</code> names above come from <code>boltapp.h</code>, which the build writes into <code>out\&lt;configuration&gt;\obj</code> from <code>[application]</code> before compiling, and which <code>modver.h</code> includes. The version and the names are said once, in <code>app.ini</code>, and the file cannot disagree with it.</p>
+<table>
+<tr><th></th><th></th></tr>
+<tr><td><code>BOLTAPP_NAME</code></td><td><code>name</code></td></tr>
+<tr><td><code>BOLTAPP_MODULE</code></td><td><code>module</code></td></tr>
+<tr><td><code>BOLTAPP_FILENAME</code></td><td><code>&lt;module&gt;.bxf</code></td></tr>
+<tr><td><code>BOLTAPP_DESCRIPTION</code></td><td><code>description</code></td></tr>
+<tr><td><code>BOLTAPP_PRODUCT</code></td><td><code>product</code></td></tr>
+<tr><td><code>BOLTAPP_COPYRIGHT</code></td><td><code>copyright</code></td></tr>
+<tr><td><code>BOLTAPP_LANGUAGE</code></td><td><code>language</code></td></tr>
+<tr><td><code>BOLTAPP_ICON</code></td><td><code>icon</code></td></tr>
+<tr><td><code>BOLTAPP_VERSION_MAJOR</code>, <code>_MINOR</code>, <code>_BUILD</code>, <code>_REVISION</code></td><td><code>version</code></td></tr>
+<tr><td><code>BOLTAPP_VERSION_STRING</code></td><td><code>version</code>, written out: <code>&quot;1.0.0.0&quot;</code></td></tr>
+</table>
+<p>An application built some other way writes its own <code>boltapp.h</code> with the same names.</p>
+<h2 id="the-sdk-record">The SDK record</h2>
+<p>Every application built with <code>BOLTSDK_APIV</code> defined — every one the SDK builds — carries a record of which API version it was built against, in a section named <code>.boltsdk</code>. Nothing has to be written for it.</p>
+<p>The system reads it before starting an application, and refuses one built for a newer SDK than it provides: such an application would call functions the system does not have. The shell says so in a message box rather than letting the machine stop at the first missing function. <a href="../api/modres.html#userres_sdkversion"><code>UserRes_SdkVersion</code></a> reads it.</p>
+</main>
+</body>
+</html>

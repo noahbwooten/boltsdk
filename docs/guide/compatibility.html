@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibility</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="compatibility">Compatibility</h1>
+<p>The point of the Bolt SDK is that an application built today keeps running on every BoltOS after it. These are the rules that make that true, for the people writing applications and for the people writing the system.</p>
+<h2 id="choosing-a-version">Choosing a version</h2>
+<pre><code>#define BOLTSDK_APIV BOLTSDK_APIV_10      /* before the first include */
+#include &lt;user.h&gt;</code></pre>
+<p>or <code>sdk = 10</code> in app.ini, which does the same. <code>BOLTSDK_APIV</code> is compared against the <code>BOLTSDK_APIV_*</code> values: everything a header declares is in a section guarded by the version that brought it,</p>
+<pre><code>#if !defined(BOLTSDK_APIV) || (BOLTSDK_APIV &gt;= BOLTSDK_APIV_10)</code></pre>
+<p>so asking for an older version hides what came later. Ask for the oldest version that has what you need, and the application runs on the most systems. Asking for a version older than 10, or newer than these headers know, is a compile error. Left undefined, the SDK's headers use the latest.</p>
+<h2 id="numbered-functions">Numbered functions</h2>
+<p>Every function in the Bolt API is exported under a number, and the plain name an application writes is mapped to the right one by the header:</p>
+<pre><code>#define User_Allocate User_Allocate1</code></pre>
+<p><code>User_Allocate1</code> is the first <code>User_Allocate</code>, and it never changes. If a later SDK needs <code>User_Allocate</code> to take different arguments, it adds <code>User_Allocate2</code> beside it, in a section guarded by that SDK's version, and the mapping becomes</p>
+<pre><code>#if BOLTSDK_APIV &gt;= BOLTSDK_APIV_11
+#define User_Allocate User_Allocate2
+#else
+#define User_Allocate User_Allocate1
+#endif</code></pre>
+<p>An application built against SDK 10 imports <code>User_Allocate1</code>, which every later system still exports; one rebuilt against SDK 11 gets the new copy under the same name. Either numbered copy can also be called by its number.</p>
+<p>A name that already ends in a digit takes an underscore before the number, so the version can still be read: <code>Thing32</code> would become <code>Thing32_1</code>. The three functions that are already second copies — <code>User_GetFileSize2</code>, <code>User_UpdateFileCursor2</code>, <code>User_TruncateFile2</code> — are called by those names.</p>
+<h2 id="what-never-changes">What never changes</h2>
+<p>Once a version is released:</p>
+<ul>
+<li><strong>No function's signature changes.</strong> Not a parameter, not a type, not the return. A change is a new numbered copy.</li>
+<li><strong>No function is removed.</strong> Its export stays in every later system.</li>
+<li><strong>No structure an application hands the system grows or changes.</strong> A new layout is a new structure, with a new function or a new resource type that takes it, the way <code>RSRCTYPE_SCITEM2</code> stands beside <code>RSRCTYPE_SCITEM</code>.</li>
+<li><strong>No constant changes its value or meaning.</strong> New flags, messages and error codes take numbers nobody has used; a retired one is left unused, never given to something else.</li>
+<li><strong>No message changes its meaning,</strong> and the exports the system calls in an application — <code>__modmain</code>, <code>__modres</code>, <code>__WindowProcedure2</code> and the rest — keep their names and shapes.</li>
+<li><strong>Behaviour an application can rely on stays.</strong> A fix that changes what a correct caller sees is a new copy, not a fix.</li>
+</ul>
+<p>The C library subset (<code>memcpy</code>, <code>sprintf</code>, …) is outside this: those names are the language's, and are not numbered. The system's own control calls are not part of the API at all, and are not in the SDK.</p>
+<h2 id="the-sdk-record">The SDK record</h2>
+<p>Every application records the SDK version it was built against. A system refuses one that wants a newer SDK than it provides, and says so, rather than letting it stop at the first function it lacks. An older system is the only place an application can fail this way; a newer one always runs it.</p>
+<h2 id="naming">Naming</h2>
+<p>Every function is <code>Module_Function</code>: the prefix says which part of the system it belongs to and so which library exports it — <code>User_</code>, <code>UserReg_</code>, <code>UserRes_</code>, <code>UserVersion_</code>, <code>UserService_</code>, <code>UserConsole_</code>, <code>UserAtomic_</code> and <code>Ge_</code> in user.dll; <code>Wndmgr_</code>; <code>CmnCtl_</code>; <code>CmnCtl2_</code>; <code>Shell_</code> and <code>ShellUi_</code> in the shell; <code>Ps_</code>; <code>NetApi_</code>. A new function follows the same scheme.</p>
+</main>
+</body>
+</html>

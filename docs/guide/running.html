@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Running and debugging</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="running-and-debugging">Running and debugging</h1>
+<p>The SDK carries a BoltOS machine: the loader <code>image/bootx64.efi</code> and the volume <code>image/fs.bin</code>, which is BoltOS 2.0 Build 415.0.sdkv10. <code>run.cmd</code> and <code>run.sh</code> start it under QEMU, in a window, with your applications on its disk.</p>
+<h2 id="run">run</h2>
+<pre><code>run.cmd                                 the machine, as its disk was left
+run.cmd examples\calc                   a project&#x27;s newest build put on first
+run.cmd C:\work\hello examples\calc     any number of them
+run.cmd out\debug\hello.bxf             an application by itself
+run.cmd out\debug\hello.bxi             a package, on the desktop
+run.cmd --clean examples\calc           a fresh disk first
+run.cmd --memory 1024                   anything else goes to run_qemu.py</code></pre>
+<p>An argument naming a file or a folder is something to put on the disk; anything else is passed to the machine runner, <code>tools/run_qemu.py</code>. Each thing put on replaces what was there under the same name, so <code>build</code> then <code>run</code> is the whole loop.</p>
+<table>
+<tr><th>What</th><th>Goes to</th></tr>
+<tr><td>a project folder</td><td>its newest build, as an application, named and drawn as app.ini says</td></tr>
+<tr><td><code>name.bxf</code></td><td><code>/programs/name/name.bxf</code>, with a link at the top of the Actions menu</td></tr>
+<tr><td><code>name.bxi</code></td><td><code>/users/default/desktop/name.bxi</code>, to be installed by opening it</td></tr>
+</table>
+<h2 id="the-disk">The disk</h2>
+<p>The disk is <code>run/bolt-disk.img</code>, made from <code>image/fs.bin</code> the first time <code>run</code> is used. It keeps everything the machine writes to it — settings, files, what was installed — from one run to the next. <code>--clean</code> makes it again from the image, which is the way back to a machine that has never seen your application. Nothing in <code>run/</code> is needed; delete the folder whenever you like.</p>
+<p><code>tools/slipstream.py</code> is what puts things on it, and it also takes a file to put anywhere, as <code>host=/path</code>:</p>
+<pre><code>python tools/slipstream.py --disk run/bolt-disk.img --image image/fs.bin ^
+    levels.dat=/programs/hello/levels.dat</code></pre>
+<p>It refuses to touch a disk a running machine has open; close the machine first.</p>
+<h2 id="the-machine">The machine</h2>
+<p>The machine is a q35 PC with 512 MB, the standard VGA at 1024 by 768, the disk on AHCI, an RTL8139 network adapter, and AC'97 sound. Useful options for <code>run</code>:</p>
+<table>
+<tr><th></th><th></th></tr>
+<tr><td><code>--memory 1024</code></td><td>more memory</td></tr>
+<tr><td><code>--disk-bus nvme</code></td><td>the disk on NVMe instead</td></tr>
+<tr><td><code>--no-net</code>, <code>--no-audio</code></td><td>without the adapter or the sound card</td></tr>
+<tr><td><code>--clock 2026-12-31T23:59:00</code></td><td>start the clock at a given UTC time</td></tr>
+</table>
+<p>The network is QEMU's user mode: the machine can reach the host as <code>10.0.2.2</code> and the outside world through it.</p>
+<p>QEMU's own keys work in its window: Ctrl+Alt+G releases the pointer, and Ctrl+Alt+F toggles full screen.</p>
+<h3 id="without-a-window">Without a window</h3>
+<p><code>tools/run_qemu.py</code> runs the machine headless, for a test or a screenshot:</p>
+<pre><code>python tools/run_qemu.py --efi image/bootx64.efi --fs-image image/fs.bin ^
+    --run-dir run --keep-disk --seconds 40 ^
+    --actions &quot;click 40 747; wait 1; shot run/menu.png&quot;</code></pre>
+<p>It runs for <code>--seconds</code>, writes <code>run/screen.png</code> at the end, and can drive the pointer and keyboard on the way: <code>click X Y</code>, <code>type text</code>, <code>key ret</code>, <code>wait N</code>, <code>shot file.png</code>. <code>python tools/run_qemu.py --help</code> has all of it.</p>
+<h2 id="the-serial-log">The serial log</h2>
+<p>Everything the system says about itself goes to <code>run/serial.log</code>: every module loaded and where, every import that could not be bound, faults. When an application will not start, look here first:</p>
+<pre><code>[boltos] loader: &#x27;hello.bxf&#x27; at 0x000000001a1d6000</code></pre>
+<h2 id="debugging">Debugging</h2>
+<p>There is no debugger attached to an application in SDK 10. What there is:</p>
+<ul>
+<li><strong>Look at it.</strong> Draw what you want to know in the window, or put it in a label. A paint costs nothing.</li>
+<li><strong>Ask.</strong> <a href="../api/shellapi.html#message-boxes"><code>Shell_MessageBox</code></a> shows a value and waits for nobody.</li>
+<li><strong>Write it down.</strong> Append lines to a file of your own, such as <code>/programs/hello/log.txt</code>, with <a href="../api/user.html#user_openfile"><code>User_OpenFile</code></a> and <code>User_WriteFile</code>, and read it in the file explorer or Notepad.</li>
+<li><strong><code>User_GetLastError</code></strong> after any call that failed says why.</li>
+</ul>
+<h3 id="a-fault">A fault</h3>
+<p>A fault in an application shows a dialog with the module, the kind of fault and the address of the instruction; dismissing it closes the application. To turn the address into a function, take the address the serial log says the module was loaded at, subtract it from the fault's address, add <code>0x180000000</code>, and find the result in <code>out\debug\&lt;module&gt;.map</code>, which lists every function at that base.</p>
+<h2 id="on-other-machines">On other machines</h2>
+<p><code>image/</code> also holds a bootable ISO of the same system. It boots on anything that starts from UEFI — another emulator, or a real PC from a USB stick — with the volume held in memory, so what is written there is gone at power off. <code>run.cmd</code> does not use it.</p>
+</main>
+</body>
+</html>

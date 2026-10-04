@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>modres.h and modver.h — what a module carries</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="modresh-and-modverh-what-a-module-carries">modres.h and modver.h — what a module carries</h1>
+<p><code>#include &lt;user.h&gt;</code> (which includes <code>modres.h</code>) · <code>#include &lt;modver.h&gt;</code> · exported by <strong>user.dll</strong> · link <strong><code>user.lib</code></strong></p>
+<p>A module's pictures and sounds travel inside its own file, attached after the image by the build (<a href="../guide/project-file.html#resources"><code>[resources]</code> and <code>[sounds]</code> in app.ini</a>). They are read from the file, never from the running image, so the shell can draw an application's icon in a menu without starting it. The same file carries a version manifest, which the file explorer's Properties reads without starting anything, and an SDK record, which says which Bolt SDK the application was built against.</p>
+<p>This page covers the calls that read all three, and what an application declares. The guide to doing it is <a href="../guide/resources-and-versions.html">Resources and versions</a>.</p>
+<hr>
+<h2 id="what-a-module-describes">What a module describes</h2>
+<p>The system asks a module about itself through the export <code>__modres</code>, one resource at a time:</p>
+<pre><code>__declspec(dllexport) WORDPTR __modres(unsigned long Index, unsigned long Query);</code></pre>
+<table>
+<tr><th><code>Query</code></th><th>answer</th></tr>
+<tr><td><code>MODRES_QUERY_COUNT</code></td><td>how many resources the module describes</td></tr>
+<tr><td><code>MODRES_QUERY_TYPE</code></td><td>the type of resource <code>Index</code>: a <code>MODRES_RSRCTYPE_*</code></td></tr>
+<tr><td><code>MODRES_QUERY_DATA</code></td><td>a pointer to resource <code>Index</code>'s descriptor</td></tr>
+</table>
+<table>
+<tr><th>Type</th><th>Descriptor</th><th>What it is</th></tr>
+<tr><td><code>MODRES_RSRCTYPE_MANIFEST</code></td><td><code>RSRCTYPE_MANIFEST</code></td><td>the application's name and its icon</td></tr>
+<tr><td><code>MODRES_RSRCTYPE_VERSION</code></td><td><code>RSRCTYPE_VERSION</code></td><td>the version manifest</td></tr>
+<tr><td><code>MODRES_RSRCTYPE_SERVICE</code></td><td><code>RSRCTYPE_SERVICE</code></td><td>a service the module provides</td></tr>
+<tr><td><code>MODRES_RSRCTYPE_SCITEM2</code></td><td><code>RSRCTYPE_SCITEM2</code></td><td>a page for System Control</td></tr>
+<tr><td><code>MODRES_RSRCTYPE_SCITEM</code></td><td><code>RSRCTYPE_SCITEM</code></td><td>a System Control page, the original form</td></tr>
+<tr><td><code>MODRES_RSRCTYPE_IMAGE</code></td><td>—</td><td>reserved</td></tr>
+</table>
+<pre><code>typedef struct _RSRCTYPE_MANIFEST {
+    char Name[64];        /* what the application is called */
+    char IconName[32];    /* a picture it carries, by name; empty for none */
+    WORD32 Flags;         /* reserved */
+} RSRCTYPE_MANIFEST;</code></pre>
+<p>A descriptor is handed back as a pointer with no length, so a type never grows: a new layout is a new type, which an older reader skips.</p>
+<h2 id="the-version-manifest">The version manifest</h2>
+<pre><code>typedef struct _RSRCTYPE_VERSION {
+    WORD32 Magic;              /* MODVERSION_MAGIC */
+    WORD32 Size;               /* sizeof(RSRCTYPE_VERSION) */
+    WORD16 FileVersion[4];     /* major, minor, build, revision */
+    WORD16 ProductVersion[4];
+    char Description[64];
+    char ProductName[64];
+    char Copyright[64];
+    char Language[32];
+    char OriginalFilename[64];
+} RSRCTYPE_VERSION;</code></pre>
+<p>Declared once, in its own section, and handed out by <code>__modres</code> as well — which is also what stops the linker discarding it. <code>modver.h</code> has what that takes. Built with the SDK, its macros take the application's numbers and strings from <code>boltapp.h</code>, which the build writes from app.ini:</p>
+<pre><code>#include &lt;modver.h&gt;
+
+MODVERSION_PLACE static const RSRCTYPE_VERSION Version = {
+    MODVERSION_HEADER,        /* magic, size, and the version twice */
+    BOLTAPP_DESCRIPTION,
+    MODVERSION_PRODUCT,       /* BOLTAPP_PRODUCT */
+    MODVERSION_COPYRIGHT,     /* BOLTAPP_COPYRIGHT */
+    MODVERSION_LANGUAGE,      /* BOLTAPP_LANGUAGE */
+    BOLTAPP_FILENAME
+};</code></pre>
+<p>The build refuses a file whose manifest is missing, is not this shape, or gives a version or a file name app.ini does not.</p>
+<h2 id="the-sdk-record">The SDK record</h2>
+<p>Every application built with <code>BOLTSDK_APIV</code> defined carries a <code>BOLTSDK_RECORD</code> in a section named <code>.boltsdk</code>, saying which API version it was built against. Nothing has to be written for it: <code>boltsdk.h</code> defines it. The system reads it before starting an application, and refuses one built for a newer SDK than it provides, with a message saying so. The system's own modules carry no record.</p>
+<hr>
+<h3 id="userres_loadimage">UserRes_LoadImage</h3>
+<pre><code>PVOID UserRes_LoadImage(PSTR Opt_ModulePath, PSTR Name,
+                        PWORD32 Opt_OutWidth, PWORD32 Opt_OutHeight);</code></pre>
+<p>user.dll · export <code>UserRes_LoadImage1</code> · SDK 10</p>
+<p>One picture out of a module, as 24-bit pixels ready for <a href="graphics.html#ge_drawbuffer"><code>Ge_DrawBuffer</code></a>, in a block the caller owns and frees with <a href="user.html#user_free"><code>User_Free</code></a>.</p>
+<ul>
+<li><code>Opt_ModulePath</code> — the module to read. <code>NULL</code> is the calling application, and a name it does not carry is then looked for in the shell, which keeps what more than one module draws: the file type icons, the message box icons, <code>AppIcon_Placeholder</code>. A path is read alone, with no falling back.</li>
+<li><code>Opt_OutWidth</code>, <code>Opt_OutHeight</code> — receive the size when not <code>NULL</code>.</li>
+<li><strong>Returns</strong> the pixels, or <code>NULL</code> when there is no such picture.</li>
+</ul>
+<h3 id="userres_has">UserRes_Has</h3>
+<pre><code>BOOL UserRes_Has(PSTR Opt_ModulePath, PSTR Name);</code></pre>
+<p>user.dll · export <code>UserRes_Has1</code> · SDK 10</p>
+<p>Whether a module carries a resource, picture or sound, without reading it.</p>
+<h3 id="userres_appicon">UserRes_AppIcon</h3>
+<pre><code>BOOL UserRes_AppIcon(PSTR Opt_ModulePath, PSTR Out, WORD32 Size);</code></pre>
+<p>user.dll · export <code>UserRes_AppIcon1</code> · SDK 10</p>
+<p>The name of a module's own application icon: the first picture it carries whose name begins <code>AppIcon_</code> (<code>MODRES_APPICON_PREFIX</code>). <code>FALSE</code> when it carries none.</p>
+<h3 id="userres_list">UserRes_List</h3>
+<pre><code>WORD32 UserRes_List(PSTR Opt_ModulePath, PMODRES_ITEMINFO Out, WORD32 Max);</code></pre>
+<p>user.dll · export <code>UserRes_List1</code> · SDK 10</p>
+<p>Every resource a module carries, in order, up to <code>Max</code> of them, described without being read:</p>
+<pre><code>typedef struct _MODRES_ITEMINFO {
+    char Name[64];
+    WORD32 Kind;            /* MODRES_KIND_PICTURE or MODRES_KIND_SOUND */
+    WORD32 Width, Height;   /* a picture&#x27;s size; a sound&#x27;s rate and channels */
+    WORD32 Bytes;           /* what it takes in the file */
+} MODRES_ITEMINFO;</code></pre>
+<p><strong>Returns</strong> how many there are, which can be more than <code>Max</code>; zero for a file that carries none.</p>
+<h3 id="userres_selfpath">UserRes_SelfPath</h3>
+<pre><code>BOOL UserRes_SelfPath(PSTR Out, WORD32 Size);</code></pre>
+<p>user.dll · export <code>UserRes_SelfPath1</code> · SDK 10</p>
+<p>The file the calling application was started from, which is what <code>NULL</code> means to the calls above. For an application that keeps files beside itself.</p>
+<h3 id="userres_shellpath">UserRes_ShellPath</h3>
+<pre><code>BOOL UserRes_ShellPath(PSTR Out, WORD32 Size);</code></pre>
+<p>user.dll · export <code>UserRes_ShellPath1</code> · SDK 10</p>
+<p>The shell's file, where the resources every module draws are kept.</p>
+<h3 id="user_registersound">User_RegisterSound</h3>
+<pre><code>BOOL User_RegisterSound(PSTR Name);</code></pre>
+<p>user.dll · export <code>User_RegisterSound1</code> · SDK 10</p>
+<p>Hands a sound the calling application carries to the mixer under its own name, so <a href="user.html#user_playsound"><code>User_PlaySound</code></a> can play it. Call it once, from <code>__modmain</code>; the samples are copied, so nothing has to stay alive. A name another module has registered is refused, which is what stops an application replacing <code>Sound_Error</code> for the whole machine.</p>
+<h3 id="userres_version">UserRes_Version</h3>
+<pre><code>BOOL UserRes_Version(PSTR Path, PRSRCTYPE_VERSION Out, PWORD32 Opt_OutLinked);</code></pre>
+<p>user.dll · export <code>UserRes_Version1</code> · SDK 10</p>
+<p>The version manifest in whatever file a path names, read as bytes: nothing is loaded or run, so any file may be asked. A manifest shorter than this build's reads with the missing fields empty.</p>
+<ul>
+<li><code>Opt_OutLinked</code> — receives when the file was linked, on the machine's clock, like the times in <code>USER_FILEINFO</code>; zero when the file does not say.</li>
+<li><strong>Returns</strong> <code>FALSE</code> for a file that is not a module or declares no manifest.</li>
+</ul>
+<h3 id="userres_sdkversion">UserRes_SdkVersion</h3>
+<pre><code>WORD32 UserRes_SdkVersion(PSTR Path);</code></pre>
+<p>user.dll · export <code>UserRes_SdkVersion1</code> · SDK 10</p>
+<p>Which Bolt SDK the module a path names was built against: the <code>BOLTSDK_APIV</code> in its SDK record, such as 10. Zero for a module with no record — every one of the system's own — and for a file that is not a module.</p>
+</main>
+</body>
+</html>

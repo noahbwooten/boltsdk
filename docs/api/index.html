@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API reference</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="api-reference">API reference</h1>
+<p>Every function in the Bolt API as of SDK 10, by header and by name. Each page describes its functions under the names an application writes; built against the SDK, each name calls the numbered export beside it, which never changes. See <a href="../guide/compatibility.html">Compatibility</a>.</p>
+<p>This page is made by <code>scripts/mksdk.py</code> from the headers. The pages it links to are written by hand.</p>
+<h2 id="by-header">By header</h2>
+<table>
+<tr><th>Header</th><th>Library</th><th>What it covers</th><th>Functions</th></tr>
+<tr><td><a href="user.html">user.h</a></td><td><code>user.lib</code></td><td>handles, memory, time, input, files, sound, the version, services, the command line</td><td>107</td></tr>
+<tr><td><a href="graphics.html">graphics.h</a></td><td><code>user.lib</code></td><td>drawing</td><td>13</td></tr>
+<tr><td><a href="registry.html">registry.h</a></td><td><code>user.lib</code></td><td>the registry</td><td>19</td></tr>
+<tr><td><a href="modres.html">modres.h</a></td><td><code>user.lib</code></td><td>what a module carries; versions and the SDK record</td><td>9</td></tr>
+<tr><td><a href="wndmgr.html">wndmgr.h</a></td><td><code>wndmgr.lib</code></td><td>windows</td><td>36</td></tr>
+<tr><td><a href="cmnctl2.html">cmnctl2.h</a></td><td><code>cmnctl2.lib</code></td><td>the retained controls</td><td>64</td></tr>
+<tr><td><a href="cmnctl.html">cmnctl.h</a></td><td><code>cmnctl.lib</code></td><td>the immediate-mode controls</td><td>21</td></tr>
+<tr><td><a href="shellapi.html">shellapi.h</a></td><td><code>boltshell.lib</code></td><td>starting programs, message boxes, links</td><td>30</td></tr>
+<tr><td><a href="psapi.html">psapi.h</a></td><td><code>psapi.lib</code></td><td>processes</td><td>13</td></tr>
+<tr><td><a href="netapi.html">netapi.h</a></td><td><code>netapi.lib</code></td><td>connections</td><td>11</td></tr>
+</table>
+<p>And the pages that are not one header's:</p>
+<ul>
+<li><a href="messages.html">Messages</a> — what the system calls in an application, and the window messages</li>
+<li><a href="types.html">Types, errors and folders</a> — the base types, the error codes, where things live</li>
+<li><a href="crt.html">The C library subset</a> — <code>memcpy</code>, <code>sprintf</code> and the rest, and where they differ</li>
+</ul>
+<h2 id="by-name">By name</h2>
+<table>
+<tr><th>Function</th><th>Header</th><th>Export</th></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_addcolumn"><code>CmnCtl2_AddColumn</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_AddColumn1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createbutton"><code>CmnCtl2_CreateButton</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateButton1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createcheckbox"><code>CmnCtl2_CreateCheckbox</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateCheckbox1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createcombobox"><code>CmnCtl2_CreateComboBox</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateComboBox1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_creategraph"><code>CmnCtl2_CreateGraph</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateGraph1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createintinput"><code>CmnCtl2_CreateIntInput</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateIntInput1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createlabel"><code>CmnCtl2_CreateLabel</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateLabel1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createmeter"><code>CmnCtl2_CreateMeter</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateMeter1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createpanel"><code>CmnCtl2_CreatePanel</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreatePanel1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createscrollbar"><code>CmnCtl2_CreateScrollBar</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateScrollBar1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createtabbar"><code>CmnCtl2_CreateTabBar</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateTabBar1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createtable"><code>CmnCtl2_CreateTable</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateTable1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createtextarea"><code>CmnCtl2_CreateTextArea</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateTextArea1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createtextinput"><code>CmnCtl2_CreateTextInput</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateTextInput1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createtree"><code>CmnCtl2_CreateTree</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateTree1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_createwindow"><code>CmnCtl2_CreateWindow</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_CreateWindow1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_destroycontrol"><code>CmnCtl2_DestroyControl</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_DestroyControl1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_destroycontrols"><code>CmnCtl2_DestroyControls</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_DestroyControls1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_destroywindow"><code>CmnCtl2_DestroyWindow</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_DestroyWindow1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_dispatch"><code>CmnCtl2_Dispatch</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_Dispatch1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getcell"><code>CmnCtl2_GetCell</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetCell1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getcolors"><code>CmnCtl2_GetColors</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetColors1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getheight"><code>CmnCtl2_GetHeight</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetHeight1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getnodecount"><code>CmnCtl2_GetNodeCount</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetNodeCount1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getnodekey"><code>CmnCtl2_GetNodeKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetNodeKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getnodetext"><code>CmnCtl2_GetNodeText</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetNodeText1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getrowcount"><code>CmnCtl2_GetRowCount</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetRowCount1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getrowkey"><code>CmnCtl2_GetRowKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetRowKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getscrollpos"><code>CmnCtl2_GetScrollPos</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetScrollPos1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getselectedkey"><code>CmnCtl2_GetSelectedKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetSelectedKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getselectednode"><code>CmnCtl2_GetSelectedNode</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetSelectedNode1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getselectednodekey"><code>CmnCtl2_GetSelectedNodeKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetSelectedNodeKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getselectedrow"><code>CmnCtl2_GetSelectedRow</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetSelectedRow1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getselection"><code>CmnCtl2_GetSelection</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetSelection1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_gettext"><code>CmnCtl2_GetText</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetText1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getvalue"><code>CmnCtl2_GetValue</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetValue1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_getvisiblenodes"><code>CmnCtl2_GetVisibleNodes</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_GetVisibleNodes1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_isnodeexpanded"><code>CmnCtl2_IsNodeExpanded</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_IsNodeExpanded1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_paint"><code>CmnCtl2_Paint</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_Paint1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_pushsample"><code>CmnCtl2_PushSample</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_PushSample1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_selectnode"><code>CmnCtl2_SelectNode</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SelectNode1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_selectrow"><code>CmnCtl2_SelectRow</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SelectRow1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setbackground"><code>CmnCtl2_SetBackground</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetBackground1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setcell"><code>CmnCtl2_SetCell</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetCell1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setcolumnwidth"><code>CmnCtl2_SetColumnWidth</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetColumnWidth1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setenabled"><code>CmnCtl2_SetEnabled</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetEnabled1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setfocus"><code>CmnCtl2_SetFocus</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetFocus1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_sethidden"><code>CmnCtl2_SetHidden</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetHidden1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setnode"><code>CmnCtl2_SetNode</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetNode1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setnodecount"><code>CmnCtl2_SetNodeCount</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetNodeCount1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setnodeexpanded"><code>CmnCtl2_SetNodeExpanded</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetNodeExpanded1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setnodekey"><code>CmnCtl2_SetNodeKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetNodeKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setplaceholder"><code>CmnCtl2_SetPlaceholder</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetPlaceholder1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setposition"><code>CmnCtl2_SetPosition</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetPosition1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setrowcount"><code>CmnCtl2_SetRowCount</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetRowCount1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setrowicon"><code>CmnCtl2_SetRowIcon</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetRowIcon1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setrowkey"><code>CmnCtl2_SetRowKey</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetRowKey1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setscrollpos"><code>CmnCtl2_SetScrollPos</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetScrollPos1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setscrollrange"><code>CmnCtl2_SetScrollRange</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetScrollRange1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setsize"><code>CmnCtl2_SetSize</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetSize1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_settext"><code>CmnCtl2_SetText</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetText1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_setvalue"><code>CmnCtl2_SetValue</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_SetValue1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_wasclicked"><code>CmnCtl2_WasClicked</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_WasClicked1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl2.html#cmnctl2_wasdoubleclicked"><code>CmnCtl2_WasDoubleClicked</code></a></td><td>cmnctl2.h</td><td><code>CmnCtl2_WasDoubleClicked1</code> in cmnctl2.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_clocktextinputml"><code>CmnCtl_ClockTextInputML</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_ClockTextInputML1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_creategraph"><code>CmnCtl_CreateGraph</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_CreateGraph1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_createtabcontroller"><code>CmnCtl_CreateTabController</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_CreateTabController1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_destroygraph"><code>CmnCtl_DestroyGraph</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DestroyGraph1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_destroytabcontroller"><code>CmnCtl_DestroyTabController</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DestroyTabController1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawbutton"><code>CmnCtl_DrawButton</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawButton1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawcheckbox"><code>CmnCtl_DrawCheckbox</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawCheckbox1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawcombobox"><code>CmnCtl_DrawComboBox</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawComboBox1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawdropitem"><code>CmnCtl_DrawDropItem</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawDropItem1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawdropitemselectable"><code>CmnCtl_DrawDropItemSelectable</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawDropItemSelectable1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawdropmenu"><code>CmnCtl_DrawDropMenu</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawDropMenu1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawgraph"><code>CmnCtl_DrawGraph</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawGraph1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawintinput"><code>CmnCtl_DrawIntInput</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawIntInput1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawmeter"><code>CmnCtl_DrawMeter</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawMeter1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawtab"><code>CmnCtl_DrawTab</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawTab1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawtabcontroller"><code>CmnCtl_DrawTabController</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawTabController1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawtextinput"><code>CmnCtl_DrawTextInput</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawTextInput1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_drawtextinputml"><code>CmnCtl_DrawTextInputML</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_DrawTextInputML1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_endtabhandler"><code>CmnCtl_EndTabHandler</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_EndTabHandler1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_getcolors"><code>CmnCtl_GetColors</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_GetColors1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="cmnctl.html#cmnctl_pushgraphsample"><code>CmnCtl_PushGraphSample</code></a></td><td>cmnctl.h</td><td><code>CmnCtl_PushGraphSample1</code> in cmnctl.dll</td></tr>
+<tr><td><a href="graphics.html#ge_clearclip"><code>Ge_ClearClip</code></a></td><td>graphics.h</td><td><code>Ge_ClearClip1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_color"><code>Ge_Color</code></a></td><td>graphics.h</td><td><code>Ge_Color1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawbuffer"><code>Ge_DrawBuffer</code></a></td><td>graphics.h</td><td><code>Ge_DrawBuffer1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawcirclefilled"><code>Ge_DrawCircleFilled</code></a></td><td>graphics.h</td><td><code>Ge_DrawCircleFilled1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawcircleoutline"><code>Ge_DrawCircleOutline</code></a></td><td>graphics.h</td><td><code>Ge_DrawCircleOutline1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawfilled"><code>Ge_DrawFilled</code></a></td><td>graphics.h</td><td><code>Ge_DrawFilled1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawoutline"><code>Ge_DrawOutline</code></a></td><td>graphics.h</td><td><code>Ge_DrawOutline1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_drawtext"><code>Ge_DrawText</code></a></td><td>graphics.h</td><td><code>Ge_DrawText1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_getclip"><code>Ge_GetClip</code></a></td><td>graphics.h</td><td><code>Ge_GetClip1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_getsbitforbmp"><code>Ge_GetsBitForBmp</code></a></td><td>graphics.h</td><td><code>Ge_GetsBitForBmp1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_gettextlength"><code>Ge_GetTextLength</code></a></td><td>graphics.h</td><td><code>Ge_GetTextLength1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_setclip"><code>Ge_SetClip</code></a></td><td>graphics.h</td><td><code>Ge_SetClip1</code> in user.dll</td></tr>
+<tr><td><a href="graphics.html#ge_stretchbitmap"><code>Ge_StretchBitmap</code></a></td><td>graphics.h</td><td><code>Ge_StretchBitmap1</code> in user.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_close"><code>NetApi_Close</code></a></td><td>netapi.h</td><td><code>NetApi_Close1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_localaddress"><code>NetApi_LocalAddress</code></a></td><td>netapi.h</td><td><code>NetApi_LocalAddress1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_open"><code>NetApi_Open</code></a></td><td>netapi.h</td><td><code>NetApi_Open1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_opentelnet"><code>NetApi_OpenTelnet</code></a></td><td>netapi.h</td><td><code>NetApi_OpenTelnet1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_parseaddress"><code>NetApi_ParseAddress</code></a></td><td>netapi.h</td><td><code>NetApi_ParseAddress1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_pending"><code>NetApi_Pending</code></a></td><td>netapi.h</td><td><code>NetApi_Pending1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_present"><code>NetApi_Present</code></a></td><td>netapi.h</td><td><code>NetApi_Present1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_receive"><code>NetApi_Receive</code></a></td><td>netapi.h</td><td><code>NetApi_Receive1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_send"><code>NetApi_Send</code></a></td><td>netapi.h</td><td><code>NetApi_Send1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_serverechoes"><code>NetApi_ServerEchoes</code></a></td><td>netapi.h</td><td><code>NetApi_ServerEchoes1</code> in netapi.dll</td></tr>
+<tr><td><a href="netapi.html#netapi_state"><code>NetApi_State</code></a></td><td>netapi.h</td><td><code>NetApi_State1</code> in netapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_createprocess"><code>Ps_CreateProcess</code></a></td><td>psapi.h</td><td><code>Ps_CreateProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_findprocessbybase"><code>Ps_FindProcessByBase</code></a></td><td>psapi.h</td><td><code>Ps_FindProcessByBase1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_getcurrentprocess"><code>Ps_GetCurrentProcess</code></a></td><td>psapi.h</td><td><code>Ps_GetCurrentProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_getprocessbase"><code>Ps_GetProcessBase</code></a></td><td>psapi.h</td><td><code>Ps_GetProcessBase1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_getprocessmax"><code>Ps_GetProcessMax</code></a></td><td>psapi.h</td><td><code>Ps_GetProcessMax1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_getprocesspath"><code>Ps_GetProcessPath</code></a></td><td>psapi.h</td><td><code>Ps_GetProcessPath1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_isapplication"><code>Ps_IsApplication</code></a></td><td>psapi.h</td><td><code>Ps_IsApplication1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_isprocess"><code>Ps_IsProcess</code></a></td><td>psapi.h</td><td><code>Ps_IsProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_issuspended"><code>Ps_IsSuspended</code></a></td><td>psapi.h</td><td><code>Ps_IsSuspended1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_killprocess"><code>Ps_KillProcess</code></a></td><td>psapi.h</td><td><code>Ps_KillProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_resumeprocess"><code>Ps_ResumeProcess</code></a></td><td>psapi.h</td><td><code>Ps_ResumeProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_startprocess"><code>Ps_StartProcess</code></a></td><td>psapi.h</td><td><code>Ps_StartProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="psapi.html#ps_suspendprocess"><code>Ps_SuspendProcess</code></a></td><td>psapi.h</td><td><code>Ps_SuspendProcess1</code> in psapi.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_bringforth"><code>Shell_BringForth</code></a></td><td>shellapi.h</td><td><code>Shell_BringForth1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_closewindow"><code>Shell_CloseWindow</code></a></td><td>shellapi.h</td><td><code>Shell_CloseWindow1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_execute"><code>Shell_Execute</code></a></td><td>shellapi.h</td><td><code>Shell_Execute1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_executeex"><code>Shell_ExecuteEx</code></a></td><td>shellapi.h</td><td><code>Shell_ExecuteEx1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_getcolors"><code>Shell_GetColors</code></a></td><td>shellapi.h</td><td><code>Shell_GetColors1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_getmessageboxid"><code>Shell_GetMessageBoxId</code></a></td><td>shellapi.h</td><td><code>Shell_GetMessageBoxId1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_getmessageboxstatus"><code>Shell_GetMessageBoxStatus</code></a></td><td>shellapi.h</td><td><code>Shell_GetMessageBoxStatus1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_getshellres"><code>Shell_GetShellRes</code></a></td><td>shellapi.h</td><td><code>Shell_GetShellRes1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_getwindowdata"><code>Shell_GetWindowData</code></a></td><td>shellapi.h</td><td><code>Shell_GetWindowData1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_iconmodulefor"><code>Shell_IconModuleFor</code></a></td><td>shellapi.h</td><td><code>Shell_IconModuleFor1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_iconnamefor"><code>Shell_IconNameFor</code></a></td><td>shellapi.h</td><td><code>Shell_IconNameFor1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_messagebox"><code>Shell_MessageBox</code></a></td><td>shellapi.h</td><td><code>Shell_MessageBox1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_minimizewindow"><code>Shell_MinimizeWindow</code></a></td><td>shellapi.h</td><td><code>Shell_MinimizeWindow1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_openfile"><code>Shell_OpenFile</code></a></td><td>shellapi.h</td><td><code>Shell_OpenFile1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_openfilewith"><code>Shell_OpenFileWith</code></a></td><td>shellapi.h</td><td><code>Shell_OpenFileWith1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_readapplink"><code>Shell_ReadAppLink</code></a></td><td>shellapi.h</td><td><code>Shell_ReadAppLink1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_setclips"><code>Shell_SetClips</code></a></td><td>shellapi.h</td><td><code>Shell_SetClips1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_typenamefor"><code>Shell_TypeNameFor</code></a></td><td>shellapi.h</td><td><code>Shell_TypeNameFor1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shell_writeapplink"><code>Shell_WriteAppLink</code></a></td><td>shellapi.h</td><td><code>Shell_WriteAppLink1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_createwindow"><code>ShellUi_CreateWindow</code></a></td><td>shellapi.h</td><td><code>ShellUi_CreateWindow1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawbutton"><code>ShellUi_DrawButton</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawButton1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawcheckbox"><code>ShellUi_DrawCheckbox</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawCheckbox1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawcombobox"><code>ShellUi_DrawComboBox</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawComboBox1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawdropitem"><code>ShellUi_DrawDropItem</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawDropItem1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawdropitemselectable"><code>ShellUi_DrawDropItemSelectable</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawDropItemSelectable1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawdropmenu"><code>ShellUi_DrawDropMenu</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawDropMenu1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawintinput"><code>ShellUi_DrawIntInput</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawIntInput1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawtextinput"><code>ShellUi_DrawTextInput</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawTextInput1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawtextinputml"><code>ShellUi_DrawTextInputML</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawTextInputML1</code> in boltshell.dll</td></tr>
+<tr><td><a href="shellapi.html#shellui_drawwindow"><code>ShellUi_DrawWindow</code></a></td><td>shellapi.h</td><td><code>ShellUi_DrawWindow1</code> in boltshell.dll</td></tr>
+<tr><td><a href="user.html#user_acquiremutex"><code>User_AcquireMutex</code></a></td><td>user.h</td><td><code>User_AcquireMutex1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_allocate"><code>User_Allocate</code></a></td><td>user.h</td><td><code>User_Allocate1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_bufferclickstate"><code>User_BufferClickState</code></a></td><td>user.h</td><td><code>User_BufferClickState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_bufferkeystate"><code>User_BufferKeyState</code></a></td><td>user.h</td><td><code>User_BufferKeyState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_buffermouseposition"><code>User_BufferMousePosition</code></a></td><td>user.h</td><td><code>User_BufferMousePosition1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_clearevent"><code>User_ClearEvent</code></a></td><td>user.h</td><td><code>User_ClearEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_copyfile"><code>User_CopyFile</code></a></td><td>user.h</td><td><code>User_CopyFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_countdirectory"><code>User_CountDirectory</code></a></td><td>user.h</td><td><code>User_CountDirectory1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_createdirectory"><code>User_CreateDirectory</code></a></td><td>user.h</td><td><code>User_CreateDirectory1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_createevent"><code>User_CreateEvent</code></a></td><td>user.h</td><td><code>User_CreateEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_createhandle"><code>User_CreateHandle</code></a></td><td>user.h</td><td><code>User_CreateHandle1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_createmutex"><code>User_CreateMutex</code></a></td><td>user.h</td><td><code>User_CreateMutex1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_deletefile"><code>User_DeleteFile</code></a></td><td>user.h</td><td><code>User_DeleteFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_deletepath"><code>User_DeletePath</code></a></td><td>user.h</td><td><code>User_DeletePath1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_deletetree"><code>User_DeleteTree</code></a></td><td>user.h</td><td><code>User_DeleteTree1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_destroyevent"><code>User_DestroyEvent</code></a></td><td>user.h</td><td><code>User_DestroyEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_destroyhandle"><code>User_DestroyHandle</code></a></td><td>user.h</td><td><code>User_DestroyHandle1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_destroymutex"><code>User_DestroyMutex</code></a></td><td>user.h</td><td><code>User_DestroyMutex1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_displayname"><code>User_DisplayName</code></a></td><td>user.h</td><td><code>User_DisplayName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_flushfilesystem"><code>User_FlushFileSystem</code></a></td><td>user.h</td><td><code>User_FlushFileSystem1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_free"><code>User_Free</code></a></td><td>user.h</td><td><code>User_Free1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getattributes"><code>User_GetAttributes</code></a></td><td>user.h</td><td><code>User_GetAttributes1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getbuttonstate"><code>User_GetButtonState</code></a></td><td>user.h</td><td><code>User_GetButtonState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getclickstate"><code>User_GetClickState</code></a></td><td>user.h</td><td><code>User_GetClickState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getdataforhandle"><code>User_GetDataForHandle</code></a></td><td>user.h</td><td><code>User_GetDataForHandle1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getfileinfo"><code>User_GetFileInfo</code></a></td><td>user.h</td><td><code>User_GetFileInfo1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getfilename"><code>User_GetFileName</code></a></td><td>user.h</td><td><code>User_GetFileName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getfilesize"><code>User_GetFileSize</code></a></td><td>user.h</td><td><code>User_GetFileSize1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getfilesize2"><code>User_GetFileSize2</code></a></td><td>user.h</td><td><code>User_GetFileSize2</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getkeyboardstate"><code>User_GetKeyboardState</code></a></td><td>user.h</td><td><code>User_GetKeyboardState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getkeystate"><code>User_GetKeyState</code></a></td><td>user.h</td><td><code>User_GetKeyState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getktime"><code>User_GetKTime</code></a></td><td>user.h</td><td><code>User_GetKTime1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getlasterror"><code>User_GetLastError</code></a></td><td>user.h</td><td><code>User_GetLastError1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getmouseposition"><code>User_GetMousePosition</code></a></td><td>user.h</td><td><code>User_GetMousePosition1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getmstime"><code>User_GetMsTime</code></a></td><td>user.h</td><td><code>User_GetMsTime1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getvolumespace"><code>User_GetVolumeSpace</code></a></td><td>user.h</td><td><code>User_GetVolumeSpace1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_getwheeltotal"><code>User_GetWheelTotal</code></a></td><td>user.h</td><td><code>User_GetWheelTotal1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_hideextensions"><code>User_HideExtensions</code></a></td><td>user.h</td><td><code>User_HideExtensions1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_inputlost"><code>User_InputLost</code></a></td><td>user.h</td><td><code>User_InputLost1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_insecurehashstring"><code>User_InsecureHashString</code></a></td><td>user.h</td><td><code>User_InsecureHashString1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_ishandlevalid"><code>User_IsHandleValid</code></a></td><td>user.h</td><td><code>User_IsHandleValid1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_localizetime"><code>User_LocalizeTime</code></a></td><td>user.h</td><td><code>User_LocalizeTime1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_mutexheld"><code>User_MutexHeld</code></a></td><td>user.h</td><td><code>User_MutexHeld1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_opendirectory"><code>User_OpenDirectory</code></a></td><td>user.h</td><td><code>User_OpenDirectory1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_openfile"><code>User_OpenFile</code></a></td><td>user.h</td><td><code>User_OpenFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_playsound"><code>User_PlaySound</code></a></td><td>user.h</td><td><code>User_PlaySound1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_pollevent"><code>User_PollEvent</code></a></td><td>user.h</td><td><code>User_PollEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_readdirectory"><code>User_ReadDirectory</code></a></td><td>user.h</td><td><code>User_ReadDirectory1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_readfile"><code>User_ReadFile</code></a></td><td>user.h</td><td><code>User_ReadFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_reallocate"><code>User_Reallocate</code></a></td><td>user.h</td><td><code>User_Reallocate1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#user_registersound"><code>User_RegisterSound</code></a></td><td>modres.h</td><td><code>User_RegisterSound1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_releasemutex"><code>User_ReleaseMutex</code></a></td><td>user.h</td><td><code>User_ReleaseMutex1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_renamefile"><code>User_RenameFile</code></a></td><td>user.h</td><td><code>User_RenameFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_setattributes"><code>User_SetAttributes</code></a></td><td>user.h</td><td><code>User_SetAttributes1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_setdataforhandle"><code>User_SetDataForHandle</code></a></td><td>user.h</td><td><code>User_SetDataForHandle1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_setevent"><code>User_SetEvent</code></a></td><td>user.h</td><td><code>User_SetEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_soundready"><code>User_SoundReady</code></a></td><td>user.h</td><td><code>User_SoundReady1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_truncatefile"><code>User_TruncateFile</code></a></td><td>user.h</td><td><code>User_TruncateFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_truncatefile2"><code>User_TruncateFile2</code></a></td><td>user.h</td><td><code>User_TruncateFile2</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_trymutex"><code>User_TryMutex</code></a></td><td>user.h</td><td><code>User_TryMutex1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_updatefilecursor"><code>User_UpdateFileCursor</code></a></td><td>user.h</td><td><code>User_UpdateFileCursor1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_updatefilecursor2"><code>User_UpdateFileCursor2</code></a></td><td>user.h</td><td><code>User_UpdateFileCursor2</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_validatefilepath"><code>User_ValidateFilePath</code></a></td><td>user.h</td><td><code>User_ValidateFilePath1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_waitevent"><code>User_WaitEvent</code></a></td><td>user.h</td><td><code>User_WaitEvent1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_wasbuttonpressed"><code>User_WasButtonPressed</code></a></td><td>user.h</td><td><code>User_WasButtonPressed1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_wasbuttonreleased"><code>User_WasButtonReleased</code></a></td><td>user.h</td><td><code>User_WasButtonReleased1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_waskeypressed"><code>User_WasKeyPressed</code></a></td><td>user.h</td><td><code>User_WasKeyPressed1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_waskeyreleased"><code>User_WasKeyReleased</code></a></td><td>user.h</td><td><code>User_WasKeyReleased1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_writefile"><code>User_WriteFile</code></a></td><td>user.h</td><td><code>User_WriteFile1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#user_zulutime"><code>User_ZuluTime</code></a></td><td>user.h</td><td><code>User_ZuluTime1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_add"><code>UserAtomic_Add</code></a></td><td>user.h</td><td><code>UserAtomic_Add1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_compareexchange"><code>UserAtomic_CompareExchange</code></a></td><td>user.h</td><td><code>UserAtomic_CompareExchange1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_decrement"><code>UserAtomic_Decrement</code></a></td><td>user.h</td><td><code>UserAtomic_Decrement1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_exchange"><code>UserAtomic_Exchange</code></a></td><td>user.h</td><td><code>UserAtomic_Exchange1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_increment"><code>UserAtomic_Increment</code></a></td><td>user.h</td><td><code>UserAtomic_Increment1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#useratomic_read"><code>UserAtomic_Read</code></a></td><td>user.h</td><td><code>UserAtomic_Read1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_banner"><code>UserConsole_Banner</code></a></td><td>user.h</td><td><code>UserConsole_Banner1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_busy"><code>UserConsole_Busy</code></a></td><td>user.h</td><td><code>UserConsole_Busy1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_close"><code>UserConsole_Close</code></a></td><td>user.h</td><td><code>UserConsole_Close1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_collect"><code>UserConsole_Collect</code></a></td><td>user.h</td><td><code>UserConsole_Collect1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_open"><code>UserConsole_Open</code></a></td><td>user.h</td><td><code>UserConsole_Open1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_prompt"><code>UserConsole_Prompt</code></a></td><td>user.h</td><td><code>UserConsole_Prompt1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_submit"><code>UserConsole_Submit</code></a></td><td>user.h</td><td><code>UserConsole_Submit1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userconsole_takeflags"><code>UserConsole_TakeFlags</code></a></td><td>user.h</td><td><code>UserConsole_TakeFlags1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_childcount"><code>UserReg_ChildCount</code></a></td><td>registry.h</td><td><code>UserReg_ChildCount1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_createkey"><code>UserReg_CreateKey</code></a></td><td>registry.h</td><td><code>UserReg_CreateKey1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_deletekey"><code>UserReg_DeleteKey</code></a></td><td>registry.h</td><td><code>UserReg_DeleteKey1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_deletevalue"><code>UserReg_DeleteValue</code></a></td><td>registry.h</td><td><code>UserReg_DeleteValue1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_enumerate"><code>UserReg_Enumerate</code></a></td><td>registry.h</td><td><code>UserReg_Enumerate1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_flush"><code>UserReg_Flush</code></a></td><td>registry.h</td><td><code>UserReg_Flush1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_keyexists"><code>UserReg_KeyExists</code></a></td><td>registry.h</td><td><code>UserReg_KeyExists1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_queryboolean"><code>UserReg_QueryBoolean</code></a></td><td>registry.h</td><td><code>UserReg_QueryBoolean1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_querydword"><code>UserReg_QueryDword</code></a></td><td>registry.h</td><td><code>UserReg_QueryDword1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_queryqword"><code>UserReg_QueryQword</code></a></td><td>registry.h</td><td><code>UserReg_QueryQword1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_querystring"><code>UserReg_QueryString</code></a></td><td>registry.h</td><td><code>UserReg_QueryString1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_queryword"><code>UserReg_QueryWord</code></a></td><td>registry.h</td><td><code>UserReg_QueryWord1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_renamekey"><code>UserReg_RenameKey</code></a></td><td>registry.h</td><td><code>UserReg_RenameKey1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_renamevalue"><code>UserReg_RenameValue</code></a></td><td>registry.h</td><td><code>UserReg_RenameValue1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_setboolean"><code>UserReg_SetBoolean</code></a></td><td>registry.h</td><td><code>UserReg_SetBoolean1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_setdword"><code>UserReg_SetDword</code></a></td><td>registry.h</td><td><code>UserReg_SetDword1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_setqword"><code>UserReg_SetQword</code></a></td><td>registry.h</td><td><code>UserReg_SetQword1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_setstring"><code>UserReg_SetString</code></a></td><td>registry.h</td><td><code>UserReg_SetString1</code> in user.dll</td></tr>
+<tr><td><a href="registry.html#userreg_setword"><code>UserReg_SetWord</code></a></td><td>registry.h</td><td><code>UserReg_SetWord1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_appicon"><code>UserRes_AppIcon</code></a></td><td>modres.h</td><td><code>UserRes_AppIcon1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_has"><code>UserRes_Has</code></a></td><td>modres.h</td><td><code>UserRes_Has1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_list"><code>UserRes_List</code></a></td><td>modres.h</td><td><code>UserRes_List1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_loadimage"><code>UserRes_LoadImage</code></a></td><td>modres.h</td><td><code>UserRes_LoadImage1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_sdkversion"><code>UserRes_SdkVersion</code></a></td><td>modres.h</td><td><code>UserRes_SdkVersion1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_selfpath"><code>UserRes_SelfPath</code></a></td><td>modres.h</td><td><code>UserRes_SelfPath1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_shellpath"><code>UserRes_ShellPath</code></a></td><td>modres.h</td><td><code>UserRes_ShellPath1</code> in user.dll</td></tr>
+<tr><td><a href="modres.html#userres_version"><code>UserRes_Version</code></a></td><td>modres.h</td><td><code>UserRes_Version1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_getbyid"><code>UserService_GetById</code></a></td><td>user.h</td><td><code>UserService_GetById1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_getbyname"><code>UserService_GetByName</code></a></td><td>user.h</td><td><code>UserService_GetByName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_getcount"><code>UserService_GetCount</code></a></td><td>user.h</td><td><code>UserService_GetCount1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_getname"><code>UserService_GetName</code></a></td><td>user.h</td><td><code>UserService_GetName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_getstate"><code>UserService_GetState</code></a></td><td>user.h</td><td><code>UserService_GetState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_pause"><code>UserService_Pause</code></a></td><td>user.h</td><td><code>UserService_Pause1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_setstartupstate"><code>UserService_SetStartupState</code></a></td><td>user.h</td><td><code>UserService_SetStartupState1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_start"><code>UserService_Start</code></a></td><td>user.h</td><td><code>UserService_Start1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userservice_stop"><code>UserService_Stop</code></a></td><td>user.h</td><td><code>UserService_Stop1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getarch"><code>UserVersion_GetArch</code></a></td><td>user.h</td><td><code>UserVersion_GetArch1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getbranchstring"><code>UserVersion_GetBranchString</code></a></td><td>user.h</td><td><code>UserVersion_GetBranchString1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getbuild"><code>UserVersion_GetBuild</code></a></td><td>user.h</td><td><code>UserVersion_GetBuild1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getbuildstring"><code>UserVersion_GetBuildString</code></a></td><td>user.h</td><td><code>UserVersion_GetBuildString1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getcopyright"><code>UserVersion_GetCopyright</code></a></td><td>user.h</td><td><code>UserVersion_GetCopyright1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getdate"><code>UserVersion_GetDate</code></a></td><td>user.h</td><td><code>UserVersion_GetDate1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getmajor"><code>UserVersion_GetMajor</code></a></td><td>user.h</td><td><code>UserVersion_GetMajor1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getminor"><code>UserVersion_GetMinor</code></a></td><td>user.h</td><td><code>UserVersion_GetMinor1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getname"><code>UserVersion_GetName</code></a></td><td>user.h</td><td><code>UserVersion_GetName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getproductname"><code>UserVersion_GetProductName</code></a></td><td>user.h</td><td><code>UserVersion_GetProductName1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getrevision"><code>UserVersion_GetRevision</code></a></td><td>user.h</td><td><code>UserVersion_GetRevision1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getshortversion"><code>UserVersion_GetShortVersion</code></a></td><td>user.h</td><td><code>UserVersion_GetShortVersion1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getsku"><code>UserVersion_GetSku</code></a></td><td>user.h</td><td><code>UserVersion_GetSku1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_getsupershortversion"><code>UserVersion_GetSuperShortVersion</code></a></td><td>user.h</td><td><code>UserVersion_GetSuperShortVersion1</code> in user.dll</td></tr>
+<tr><td><a href="user.html#userversion_gettime"><code>UserVersion_GetTime</code></a></td><td>user.h</td><td><code>UserVersion_GetTime1</code> in user.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_bringforth"><code>Wndmgr_BringForth</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_BringForth1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_closemodulewindows"><code>Wndmgr_CloseModuleWindows</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_CloseModuleWindows1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_closewindow"><code>Wndmgr_CloseWindow</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_CloseWindow1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_createwindow"><code>Wndmgr_CreateWindow</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_CreateWindow1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_drawwindow"><code>Wndmgr_DrawWindow</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_DrawWindow1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_focusvisible"><code>Wndmgr_FocusVisible</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_FocusVisible1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_getcolors"><code>Wndmgr_GetColors</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_GetColors1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_getscrolly"><code>Wndmgr_GetScrollY</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_GetScrollY1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_getshellres"><code>Wndmgr_GetShellRes</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_GetShellRes1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_getwindowdata"><code>Wndmgr_GetWindowData</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_GetWindowData1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_invalidatewindow"><code>Wndmgr_InvalidateWindow</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_InvalidateWindow1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_keysondesktop"><code>Wndmgr_KeysOnDesktop</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_KeysOnDesktop1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_killtimer"><code>Wndmgr_KillTimer</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_KillTimer1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_listwindowatpoint"><code>Wndmgr_ListWindowAtPoint</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ListWindowAtPoint1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_loadicon"><code>Wndmgr_LoadIcon</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_LoadIcon1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_loadiconfrom"><code>Wndmgr_LoadIconFrom</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_LoadIconFrom1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_minimizewindow"><code>Wndmgr_MinimizeWindow</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_MinimizeWindow1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_modulehaswindows"><code>Wndmgr_ModuleHasWindows</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ModuleHasWindows1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_modulewindowcount"><code>Wndmgr_ModuleWindowCount</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ModuleWindowCount1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_paintscrollbar"><code>Wndmgr_PaintScrollBar</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_PaintScrollBar1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_requestspecialobject"><code>Wndmgr_RequestSpecialObject</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_RequestSpecialObject1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollclamp"><code>Wndmgr_ScrollClamp</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollClamp1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollfrompoint"><code>Wndmgr_ScrollFromPoint</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollFromPoint1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollgrab"><code>Wndmgr_ScrollGrab</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollGrab1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollmax"><code>Wndmgr_ScrollMax</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollMax1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollneeded"><code>Wndmgr_ScrollNeeded</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollNeeded1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollpart"><code>Wndmgr_ScrollPart</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollPart1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_scrollstep"><code>Wndmgr_ScrollStep</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_ScrollStep1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_setclips"><code>Wndmgr_SetClips</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetClips1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_setcontentheight"><code>Wndmgr_SetContentHeight</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetContentHeight1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_setdesktoppainter"><code>Wndmgr_SetDesktopPainter</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetDesktopPainter1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_setoverlay"><code>Wndmgr_SetOverlay</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetOverlay1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_settimer"><code>Wndmgr_SetTimer</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetTimer1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_setwindowcursor"><code>Wndmgr_SetWindowCursor</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_SetWindowCursor1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_visiblewidth"><code>Wndmgr_VisibleWidth</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_VisibleWidth1</code> in wndmgr.dll</td></tr>
+<tr><td><a href="wndmgr.html#wndmgr_windowatpoint"><code>Wndmgr_WindowAtPoint</code></a></td><td>wndmgr.h</td><td><code>Wndmgr_WindowAtPoint1</code> in wndmgr.dll</td></tr>
+</table>
+</main>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>netapi.h — connections</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="netapih-connections">netapi.h — connections</h1>
+<p><code>#include &lt;netapi.h&gt;</code> · exported by <strong>netapi.dll</strong> · link <strong><code>netapi.lib</code></strong></p>
+<p>TCP connections this machine opens, and telnet over them. Nothing here ever waits: an open returns at once and is watched until it connects, and a send or a receive moves what it can and answers how much. Everything tolerates a machine with no network adapter and fails rather than waiting for one.</p>
+<p>A connection is a <code>NETAPISOCKET</code>, which is zero when none could be opened. It carries a generation, so one kept past a disconnection does not reach whatever took its slot next.</p>
+<pre><code>#define NETAPI_IDLE        0   /* not a connection, or a stale one */
+#define NETAPI_CONNECTING  1   /* the handshake is under way */
+#define NETAPI_CONNECTED   2   /* open */
+#define NETAPI_CLOSED      3   /* closed by either end */
+#define NETAPI_REFUSED     4   /* the open never completed */</code></pre>
+<pre><code>BYTE Address[4];
+NETAPISOCKET Socket = 0;
+
+if (NetApi_ParseAddress(&quot;10.0.2.2&quot;, Address))
+    Socket = NetApi_Open(Address, 7);
+
+/* ... then, from a timer: */
+switch (NetApi_State(Socket)) {
+case NETAPI_CONNECTED:
+    NetApi_Send(Socket, &quot;hello\r\n&quot;, 7);
+    Got = NetApi_Receive(Socket, Buffer, sizeof(Buffer));
+    break;
+case NETAPI_CLOSED:
+case NETAPI_REFUSED:
+    NetApi_Close(Socket);
+    Socket = 0;
+    break;
+}</code></pre>
+<p>Under the SDK's emulator the host machine is <code>10.0.2.2</code>.</p>
+<hr>
+<h3 id="netapi_present">NetApi_Present</h3>
+<pre><code>BOOL NetApi_Present(VOID);</code></pre>
+<p>netapi.dll · export <code>NetApi_Present1</code> · SDK 10</p>
+<p>Whether the machine has a working adapter.</p>
+<h3 id="netapi_parseaddress">NetApi_ParseAddress</h3>
+<pre><code>BOOL NetApi_ParseAddress(PSTR Text, PWORD8 OutAddress);</code></pre>
+<p>netapi.dll · export <code>NetApi_ParseAddress1</code> · SDK 10</p>
+<p>A dotted quad, such as <code>&quot;192.168.1.20&quot;</code>, into four bytes. <code>FALSE</code> for anything else, so a mistyped address is reported rather than half read. There are no host names: SDK 10 has no name lookup.</p>
+<h3 id="netapi_localaddress">NetApi_LocalAddress</h3>
+<pre><code>VOID NetApi_LocalAddress(PWORD8 OutAddress);</code></pre>
+<p>netapi.dll · export <code>NetApi_LocalAddress1</code> · SDK 10</p>
+<p>This machine's own address, into four bytes.</p>
+<h3 id="netapi_open">NetApi_Open</h3>
+<pre><code>NETAPISOCKET NetApi_Open(PWORD8 Address, WORD16 Port);</code></pre>
+<p>netapi.dll · export <code>NetApi_Open1</code> · SDK 10</p>
+<p>Opens a connection to a port at an address. Returns before the handshake finishes, so the connection starts in <code>NETAPI_CONNECTING</code> and nothing may be sent until <a href="#netapi_state"><code>NetApi_State</code></a> says <code>NETAPI_CONNECTED</code>. An open that fails ends in <code>NETAPI_REFUSED</code>.</p>
+<ul>
+<li><strong>Returns</strong> the connection, or 0 when there is no adapter, no free slot or no local port left.</li>
+</ul>
+<h3 id="netapi_opentelnet">NetApi_OpenTelnet</h3>
+<pre><code>NETAPISOCKET NetApi_OpenTelnet(PWORD8 Address, WORD16 Port);</code></pre>
+<p>netapi.dll · export <code>NetApi_OpenTelnet1</code> · SDK 10</p>
+<p>The same, speaking telnet: option negotiation is answered as it arrives and taken out of the stream, so what <a href="#netapi_receive"><code>NetApi_Receive</code></a> gives back is the text alone.</p>
+<h3 id="netapi_state">NetApi_State</h3>
+<pre><code>WORD32 NetApi_State(NETAPISOCKET Socket);</code></pre>
+<p>netapi.dll · export <code>NetApi_State1</code> · SDK 10</p>
+<p>What a connection is doing: a <code>NETAPI_*</code> value.</p>
+<h3 id="netapi_send">NetApi_Send</h3>
+<pre><code>WORD32 NetApi_Send(NETAPISOCKET Socket, PVOID Data, WORD32 Length);</code></pre>
+<p>netapi.dll · export <code>NetApi_Send1</code> · SDK 10</p>
+<p>Queues data to go out. <strong>Returns</strong> how much was taken, which may be less than <code>Length</code> and may be zero; send the rest later.</p>
+<h3 id="netapi_receive">NetApi_Receive</h3>
+<pre><code>WORD32 NetApi_Receive(NETAPISOCKET Socket, PVOID Buffer, WORD32 Capacity);</code></pre>
+<p>netapi.dll · export <code>NetApi_Receive1</code> · SDK 10</p>
+<p>Takes what has arrived, up to <code>Capacity</code> bytes. <strong>Returns</strong> how much, which may be zero.</p>
+<h3 id="netapi_pending">NetApi_Pending</h3>
+<pre><code>WORD32 NetApi_Pending(NETAPISOCKET Socket);</code></pre>
+<p>netapi.dll · export <code>NetApi_Pending1</code> · SDK 10</p>
+<p>How much has arrived and not been read. It survives the connection closing, so drain a closed connection before treating it as finished: the last thing a peer said before hanging up is still there.</p>
+<h3 id="netapi_serverechoes">NetApi_ServerEchoes</h3>
+<pre><code>BOOL NetApi_ServerEchoes(NETAPISOCKET Socket);</code></pre>
+<p>netapi.dll · export <code>NetApi_ServerEchoes1</code> · SDK 10</p>
+<p>For a telnet connection, whether the far end agreed to echo what is typed. A terminal draws what is typed only when this is <code>FALSE</code>, or every character appears twice.</p>
+<h3 id="netapi_close">NetApi_Close</h3>
+<pre><code>VOID NetApi_Close(NETAPISOCKET Socket);</code></pre>
+<p>netapi.dll · export <code>NetApi_Close1</code> · SDK 10</p>
+<p>Finishes with a connection. Anything already sent goes out first. The handle is not valid afterwards, though the exchange may take a moment longer to end.</p>
+</main>
+</body>
+</html>

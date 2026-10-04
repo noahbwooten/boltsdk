@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>graphics.h — drawing</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="graphicsh-drawing">graphics.h — drawing</h1>
+<p><code>#include &lt;graphics.h&gt;</code> · exported by <strong>user.dll</strong> · link <strong><code>user.lib</code></strong></p>
+<p>The primitives: rectangles, text, circles, and blocks of pixels, all drawn into whatever the system is pointing them at. During a message-driven window's <code>MSG_PAINT</code> that is the window's own surface, in window coordinates — (0, 0) is the window's top-left corner, the title bar takes the first <code>WNDMGR_TITLEH</code> (30) rows, and the client area is below it. Drawing at any other time draws nowhere useful; ask for a repaint with <a href="wndmgr.html#wndmgr_invalidatewindow"><code>Wndmgr_InvalidateWindow</code></a> instead. An application on the original immediate-mode contract is handed screen coordinates and draws every frame; see the <a href="../guide/application-model.html#windows">application model</a>.</p>
+<p>Most applications draw with the retained controls in <a href="cmnctl2.html">cmnctl2.h</a> and reach for these only for something of their own.</p>
+<h2 id="colours-and-pixels">Colours and pixels</h2>
+<p>A colour is a <code>WORD32</code> holding <code>0x00RRGGBB</code>, which <a href="#ge_color"><code>Ge_Color</code></a> builds. The window manager's palette (<a href="wndmgr.html#wndmgr_getcolors"><code>Wndmgr_GetColors</code></a>) holds the colours the rest of the system draws with, and using those keeps an application looking like it belongs.</p>
+<p>A block of pixels — what <a href="#ge_drawbuffer"><code>Ge_DrawBuffer</code></a> draws and what <a href="modres.html#userres_loadimage"><code>UserRes_LoadImage</code></a> and <a href="wndmgr.html#wndmgr_loadicon"><code>Wndmgr_LoadIcon</code></a> hand back — is 24-bit: three bytes a pixel, in the order blue, green, red, rows from the top, with no padding between rows. Magenta (255, 0, 255) is transparent: a pixel of exactly that colour is not drawn.</p>
+<h2 id="fonts">Fonts</h2>
+<pre><code>#define GEFONT_NORMAL  0   /* 8 pixels a character */
+#define GEFONT_BOLD    1   /* the same, struck twice a pixel apart: 9 */
+#define GEFONT_OUTLINE 2   /* with a dark edge around it: 8, plus 2 overall */</code></pre>
+<p>One typeface, fixed width, 15 pixels tall. Text is drawn as one line; a newline is not a line break.</p>
+<hr>
+<h3 id="ge_color">Ge_Color</h3>
+<pre><code>WORD32 Ge_Color(BYTE r, BYTE g, BYTE b, BYTE a);</code></pre>
+<p>user.dll · export <code>Ge_Color1</code> · SDK 10</p>
+<p>A colour from its red, green and blue. Alpha is accepted and ignored: nothing in SDK 10 blends.</p>
+<h3 id="ge_drawfilled">Ge_DrawFilled</h3>
+<pre><code>VOID Ge_DrawFilled(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, WORD32 Color);</code></pre>
+<p>user.dll · export <code>Ge_DrawFilled1</code> · SDK 10</p>
+<p>A solid rectangle, <code>W</code> by <code>H</code>, with its top-left corner at (<code>X</code>, <code>Y</code>).</p>
+<h3 id="ge_drawoutline">Ge_DrawOutline</h3>
+<pre><code>VOID Ge_DrawOutline(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, WORD32 Color);</code></pre>
+<p>user.dll · export <code>Ge_DrawOutline1</code> · SDK 10</p>
+<p>The edge of the same rectangle, one pixel wide, drawn inside its bounds.</p>
+<h3 id="ge_drawtext">Ge_DrawText</h3>
+<pre><code>VOID Ge_DrawText(WORD32 X, WORD32 Y, PSTR Text, WORD32 Color, WORD8 Font);</code></pre>
+<p>user.dll · export <code>Ge_DrawText1</code> · SDK 10</p>
+<p>One line of text with the top-left of its first character at (<code>X</code>, <code>Y</code>). <code>Font</code> is a <code>GEFONT_*</code>. A <code>NULL</code> string draws nothing.</p>
+<h3 id="ge_gettextlength">Ge_GetTextLength</h3>
+<pre><code>VOID Ge_GetTextLength(PSTR Text, PWORD32 OutLength, WORD32 Font);</code></pre>
+<p>user.dll · export <code>Ge_GetTextLength1</code> · SDK 10</p>
+<p>How wide a string draws in a font, in pixels, written to <code>*OutLength</code>. For centring and right-aligning: <code>X + (W - Length) / 2</code>.</p>
+<h3 id="ge_drawcirclefilled">Ge_DrawCircleFilled</h3>
+<pre><code>VOID Ge_DrawCircleFilled(WORD32 X, WORD32 Y, WORD32 R, WORD32 Color);</code></pre>
+<p>user.dll · export <code>Ge_DrawCircleFilled1</code> · SDK 10</p>
+<p>A solid circle of radius <code>R</code> centred on (<code>X</code>, <code>Y</code>).</p>
+<h3 id="ge_drawcircleoutline">Ge_DrawCircleOutline</h3>
+<pre><code>VOID Ge_DrawCircleOutline(WORD32 X, WORD32 Y, WORD32 R, WORD32 Color);</code></pre>
+<p>user.dll · export <code>Ge_DrawCircleOutline1</code> · SDK 10</p>
+<p>The edge of the same circle, one pixel wide.</p>
+<h3 id="ge_drawbuffer">Ge_DrawBuffer</h3>
+<pre><code>VOID Ge_DrawBuffer(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, PVOID Data);</code></pre>
+<p>user.dll · export <code>Ge_DrawBuffer1</code> · SDK 10</p>
+<p>A block of 24-bit pixels, <code>W</code> by <code>H</code>, laid out as <a href="#colours-and-pixels">above</a>. Magenta pixels are skipped, which is how an icon has a shape. <code>NULL</code> draws nothing.</p>
+<h3 id="ge_setclip">Ge_SetClip</h3>
+<pre><code>VOID Ge_SetClip(WORD32 X, WORD32 Y, WORD32 W, WORD32 H);</code></pre>
+<p>user.dll · export <code>Ge_SetClip1</code> · SDK 10</p>
+<p>Confines every primitive to a rectangle until it is cleared, so a list can draw rows past its own edge and have them cut off rather than counted out beforehand. A zero width or height means no clip. A control that narrows the clip puts back what it found with <a href="#ge_getclip"><code>Ge_GetClip</code></a> rather than clearing it, so it does not expose whatever contains it.</p>
+<h3 id="ge_getclip">Ge_GetClip</h3>
+<pre><code>VOID Ge_GetClip(PWORD32 X, PWORD32 Y, PWORD32 W, PWORD32 H);</code></pre>
+<p>user.dll · export <code>Ge_GetClip1</code> · SDK 10</p>
+<p>The clip in force, all zeros for none. Any pointer may be <code>NULL</code>.</p>
+<h3 id="ge_clearclip">Ge_ClearClip</h3>
+<pre><code>VOID Ge_ClearClip(VOID);</code></pre>
+<p>user.dll · export <code>Ge_ClearClip1</code> · SDK 10</p>
+<p>Removes the clip.</p>
+<h3 id="ge_stretchbitmap">Ge_StretchBitmap</h3>
+<pre><code>VOID Ge_StretchBitmap(PVOID Bits, WORD32 OldWidth, WORD32 OldHeight,
+                      WORD32 NewWidth, WORD32 NewHeight, PVOID OutBits);</code></pre>
+<p>user.dll · export <code>Ge_StretchBitmap1</code> · SDK 10</p>
+<p>Scales a block of 24-bit pixels to another size by taking the nearest pixel, writing into <code>OutBits</code>, which the caller provides.</p>
+<p>In SDK 10 this is for square images only: rows are counted with <code>NewWidth</code>, so <code>NewWidth</code> and <code>NewHeight</code> must be equal and <code>OutBits</code> must hold <code>NewWidth * NewWidth * 3</code> bytes. For icons, which are square, ask <a href="wndmgr.html#wndmgr_loadicon"><code>Wndmgr_LoadIcon</code></a> for the size wanted instead.</p>
+<h3 id="ge_getsbitforbmp">Ge_GetsBitForBmp</h3>
+<pre><code>VOID Ge_GetsBitForBmp(PVOID Bmp, PVOID* Bits, WORD32* BitSize);</code></pre>
+<p>user.dll · export <code>Ge_GetsBitForBmp1</code> · SDK 10</p>
+<p>The pixel data out of a <code>.bmp</code> file held in memory, copied into a block the caller owns and frees with <a href="user.html#user_free"><code>User_Free</code></a>. Only an uncompressed 24-bit bitmap is taken; for anything else <code>*Bits</code> is <code>NULL</code> and <code>*BitSize</code> zero.</p>
+<p>The pixels are exactly as the file stores them — rows from the bottom up, each padded to a multiple of four bytes — which is not the layout <a href="#ge_drawbuffer"><code>Ge_DrawBuffer</code></a> draws; the width and height are in the file's header. A picture the application draws is better carried as a resource and loaded with <a href="modres.html#userres_loadimage"><code>UserRes_LoadImage</code></a>, which hands back pixels ready to draw.</p>
+</main>
+</body>
+</html>

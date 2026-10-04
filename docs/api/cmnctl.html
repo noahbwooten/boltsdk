@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cmnctl.h — the immediate-mode controls</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="cmnctlh-the-immediate-mode-controls">cmnctl.h — the immediate-mode controls</h1>
+<p><code>#include &lt;cmnctl.h&gt;</code> · exported by <strong>cmnctl.dll</strong> · link <strong><code>cmnctl.lib</code></strong></p>
+<p>The original controls, which are drawn rather than kept: each call draws the control and answers what happened to it this frame, and the application holds the state between frames. They belong to the original window contract, <code>__WindowProcedure</code>, which is called every frame in screen coordinates; see the <a href="../guide/application-model.html#windows">application model</a>.</p>
+<p>A new application uses the <a href="cmnctl2.html">retained controls</a> instead, which paint only when something changes and handle the keyboard and Tab properly. These are frozen as they are, for the applications written against them, and the two libraries share no code.</p>
+<pre><code>__declspec(dllexport) void __WindowProcedure(WORD32 X, WORD32 Y, WORD32 W,
+    WORD32 H, WORD32 MouseX, WORD32 MouseY, BOOL LeftButton, WORD64 Reserved)
+{
+    static BOOL Ticked;
+
+    if (CmnCtl_DrawButton(X + 10, Y + 40, 80, 30, &quot;Go&quot;))
+        ...;   /* pressed this frame */
+
+    CmnCtl_DrawCheckbox(X + 10, Y + 80, &quot;Ticked&quot;, &amp;Ticked);
+}</code></pre>
+<p>The pointer the controls answer to is the one the window manager handed the window being drawn, so they work only inside a window procedure. A control that acts on a click consumes it, so the press does not also land on whatever is drawn after it.</p>
+<hr>
+<h3 id="cmnctl_drawbutton">CmnCtl_DrawButton</h3>
+<pre><code>BOOL CmnCtl_DrawButton(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, char* Text);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawButton1</code> · SDK 10</p>
+<p>A button, <code>W</code> by <code>H</code>, with its caption centred. <strong>Returns</strong> <code>TRUE</code> on the frame it is clicked.</p>
+<h3 id="cmnctl_drawcheckbox">CmnCtl_DrawCheckbox</h3>
+<pre><code>BOOL CmnCtl_DrawCheckbox(WORD32 X, WORD32 Y, PSTR Title, PBOOL State);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawCheckbox1</code> · SDK 10</p>
+<p>A 20-pixel box with <code>Title</code> beside it, filled while <code>*State</code> is 1. A click turns <code>*State</code> over. <strong>Returns</strong> <code>TRUE</code> on the frame it changed.</p>
+<h3 id="cmnctl_drawcombobox">CmnCtl_DrawComboBox</h3>
+<pre><code>BOOL CmnCtl_DrawComboBox(WORD32 X, WORD32 Y, WORD32 W, PSTR Title,
+                         WORD32 ElementCnt, PSTR* Elements, PWORD32 Selected,
+                         PBOOL IsOpen);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawComboBox1</code> · SDK 10</p>
+<p><code>Title</code>, then a box <code>W</code> wide showing <code>Elements[*Selected]</code>. A click opens it (<code>*IsOpen</code> becomes 1) and draws the list below; a click on an item sets <code>*Selected</code> and closes it. <strong>Returns</strong> <code>TRUE</code> on the frame an item is chosen.</p>
+<h3 id="cmnctl_drawtextinput">CmnCtl_DrawTextInput</h3>
+<pre><code>VOID CmnCtl_DrawTextInput(WORD32 X, WORD32 Y, WORD32 W, PSTR Text,
+                          PBOOL IsOpen, PWORD32 CursorPos);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawTextInput1</code> · SDK 10</p>
+<p>A one-line box <code>W</code> wide showing <code>Text</code>, which takes typing while the pointer is over it, editing <code>Text</code> in place at <code>*CursorPos</code>. <code>Text</code> must have room for <code>W / 8</code> characters and a terminator. <code>IsOpen</code> is reserved.</p>
+<h3 id="cmnctl_drawtextinputml">CmnCtl_DrawTextInputML</h3>
+<pre><code>VOID CmnCtl_DrawTextInputML(WORD32 X, WORD32 Y, WORD32 W, WORD32 Lines,
+                            PSTR Text, PWORD32 CursorX, PWORD32 CursorY,
+                            PBOOL IsInFocus, PSTR** RichCtx);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawTextInputML1</code> · SDK 10</p>
+<p>A box of <code>Lines</code> lines, <code>W</code> wide, editing <code>Text</code> in place. <code>Text</code> must have room for <code>(W / 8) * Lines</code> characters and a terminator. <code>*CursorX</code> and <code>*CursorY</code> are the caret; <code>*IsInFocus</code> whether it takes keys; <code>*RichCtx</code> is a line table the control keeps between frames, which starts <code>NULL</code>.</p>
+<h3 id="cmnctl_clocktextinputml">CmnCtl_ClockTextInputML</h3>
+<pre><code>VOID CmnCtl_ClockTextInputML(PINPUT_ML Input);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_ClockTextInputML1</code> · SDK 10</p>
+<p>Rebuilds an <code>INPUT_ML</code>'s line table from its text — <code>Text</code> broken at newlines and every <code>MAX_LINE_LENGTH</code> characters into <code>Lines</code> rows — freeing the old table.</p>
+<pre><code>typedef struct _INPUT_ML {
+    char** RichText, * Text;
+    int Lines;
+    int MAX_TEXT_LENGTH;
+    int MAX_LINE_LENGTH;
+} INPUT_ML, *PINPUT_ML;</code></pre>
+<h3 id="cmnctl_drawintinput">CmnCtl_DrawIntInput</h3>
+<pre><code>BOOL CmnCtl_DrawIntInput(WORD32 X, WORD32 Y, WORD32 W, INT Min, INT Max,
+                         PINT Value);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawIntInput1</code> · SDK 10</p>
+<p><code>*Value</code> in a box <code>W</code> wide, with + and − buttons at its right that step it within <code>Min</code> and <code>Max</code>. <strong>Returns</strong> <code>TRUE</code> on the frame it changed.</p>
+<h3 id="cmnctl_createtabcontroller">CmnCtl_CreateTabController</h3>
+<pre><code>PTAB_CTL CmnCtl_CreateTabController(WORD32 TabCount, PSTR* TabNames);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_CreateTabController1</code> · SDK 10</p>
+<p>A tab bar's state: the names are copied, the first tab is selected. Free it with <a href="#cmnctl_destroytabcontroller"><code>CmnCtl_DestroyTabController</code></a>.</p>
+<pre><code>typedef struct _TAB_CTL {
+    WORD32 TabCount;
+    WORD32 SelectedTab;
+    WORD32* TabSizes;
+    PSTR* TabNames;
+} TAB_CTL, *PTAB_CTL;</code></pre>
+<h3 id="cmnctl_destroytabcontroller">CmnCtl_DestroyTabController</h3>
+<pre><code>VOID CmnCtl_DestroyTabController(PTAB_CTL TabCtl);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DestroyTabController1</code> · SDK 10</p>
+<h3 id="cmnctl_drawtabcontroller">CmnCtl_DrawTabController</h3>
+<pre><code>VOID CmnCtl_DrawTabController(PTAB_CTL TabCtl, WORD32 X, WORD32 Y, WORD32 W);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawTabController1</code> · SDK 10</p>
+<p>Draws the bar, 30 pixels tall and <code>W</code> wide; a click on a tab selects it.</p>
+<h3 id="cmnctl_drawtab">CmnCtl_DrawTab</h3>
+<pre><code>BOOL CmnCtl_DrawTab(PTAB_CTL TabCtl, WORD32 TabId);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawTab1</code> · SDK 10</p>
+<p>Whether tab <code>TabId</code> is the selected one, so a page is drawn only when its tab is:</p>
+<pre><code>CmnCtl_DrawTabController(Tabs, X + 10, Y + 40, W - 20);
+if (CmnCtl_DrawTab(Tabs, 0)) { /* the first page */ }
+if (CmnCtl_DrawTab(Tabs, 1)) { /* the second */ }
+CmnCtl_EndTabHandler(Tabs);</code></pre>
+<h3 id="cmnctl_endtabhandler">CmnCtl_EndTabHandler</h3>
+<pre><code>VOID CmnCtl_EndTabHandler(PTAB_CTL TabCtl);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_EndTabHandler1</code> · SDK 10</p>
+<p>Closes the pages after the last <code>CmnCtl_DrawTab</code>. Does nothing in SDK 10, and is called for the sake of applications that rely on the pairing.</p>
+<h3 id="cmnctl_drawdropmenu">CmnCtl_DrawDropMenu</h3>
+<pre><code>VOID CmnCtl_DrawDropMenu(WORD32 X, WORD32 Y, WORD32 W, PSTR Name, PVOID Icon,
+                         PBOOL State, PVOID StateChangedCb);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawDropMenu1</code> · SDK 10</p>
+<p>A heading <code>W</code> wide, with an icon and an arrow, that opens and closes a group of items beneath it: a click turns <code>*State</code> over. <code>StateChangedCb</code>, when not <code>NULL</code>, is called as <code>void Callback(void)</code> when it does.</p>
+<h3 id="cmnctl_drawdropitem">CmnCtl_DrawDropItem</h3>
+<pre><code>VOID CmnCtl_DrawDropItem(WORD32 X, WORD32 Y, WORD32 W, PSTR Name, PVOID Icon);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawDropItem1</code> · SDK 10</p>
+<p>One row beneath an open drop menu: an icon and a name.</p>
+<h3 id="cmnctl_drawdropitemselectable">CmnCtl_DrawDropItemSelectable</h3>
+<pre><code>BOOL CmnCtl_DrawDropItemSelectable(WORD32 X, WORD32 Y, WORD32 W, PSTR Name,
+                                   PVOID Icon, BOOL Selected);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawDropItemSelectable1</code> · SDK 10</p>
+<p>The same row, highlighted when <code>Selected</code> and answering clicks. <strong>Returns</strong> <code>TRUE</code> on the frame it is clicked.</p>
+<h3 id="cmnctl_drawmeter">CmnCtl_DrawMeter</h3>
+<pre><code>VOID CmnCtl_DrawMeter(WORD32 X, WORD32 Y, WORD32 W, WORD32 H, WORD32 Value,
+                      WORD32 Max, PSTR Suffix);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawMeter1</code> · SDK 10</p>
+<p>A value now: a segmented column filled to <code>Value</code> out of <code>Max</code>, with the reading and <code>Suffix</code> ("%", "MB") along its bottom. <code>NULL</code> for no readout and no room kept for one.</p>
+<h3 id="cmnctl_creategraph">CmnCtl_CreateGraph</h3>
+<pre><code>PGRAPH_CTL CmnCtl_CreateGraph(WORD32 SampleCount, WORD32 Max);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_CreateGraph1</code> · SDK 10</p>
+<p>The same value over time: a ring of <code>SampleCount</code> readings. <code>Max</code> is full scale, or zero to scale to the largest reading held. The period it covers is <code>SampleCount</code> times however often it is pushed, so push from a timer, not from painting.</p>
+<h3 id="cmnctl_destroygraph">CmnCtl_DestroyGraph</h3>
+<pre><code>VOID CmnCtl_DestroyGraph(PGRAPH_CTL Graph);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DestroyGraph1</code> · SDK 10</p>
+<h3 id="cmnctl_pushgraphsample">CmnCtl_PushGraphSample</h3>
+<pre><code>VOID CmnCtl_PushGraphSample(PGRAPH_CTL Graph, WORD32 Value);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_PushGraphSample1</code> · SDK 10</p>
+<p>Adds a reading, dropping the oldest once the ring is full.</p>
+<h3 id="cmnctl_drawgraph">CmnCtl_DrawGraph</h3>
+<pre><code>VOID CmnCtl_DrawGraph(PGRAPH_CTL Graph, WORD32 X, WORD32 Y, WORD32 W,
+                      WORD32 H);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_DrawGraph1</code> · SDK 10</p>
+<p>Draws the readings as a trace over a grid, newest at the right.</p>
+<h3 id="cmnctl_getcolors">CmnCtl_GetColors</h3>
+<pre><code>PWNDMGR_COLORS CmnCtl_GetColors(void);</code></pre>
+<p>cmnctl.dll · export <code>CmnCtl_GetColors1</code> · SDK 10</p>
+<p>The palette, the same table the window manager's <a href="wndmgr.html#wndmgr_getcolors"><code>Wndmgr_GetColors</code></a> answers.</p>
+</main>
+</body>
+</html>

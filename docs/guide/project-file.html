@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The project file</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="the-project-file">The project file</h1>
+<p>A project is a folder with an <code>app.ini</code> in it. The file says everything about an application that is not C, and <code>build.cmd</code>, <code>run.cmd</code> and the packager read it. Paths in it are relative to the folder it is in.</p>
+<p>It is an INI file: <code>[sections]</code>, <code>key = value</code> lines, and comments that start with <code>;</code> or <code>#</code>. Keys are written as shown; registry paths keep their case.</p>
+<pre><code>[application]
+name        = SDK Calculator
+module      = sdkcalc
+version     = 1.0.0.0
+description = Calculator
+product     = Bolt SDK Examples
+copyright   = Copyright (c) Noah Wooten 2023-2026
+icon        = AppIcon_Calculator
+
+[build]
+sdk     = 10
+sources = src/main.c src/calc.c
+imports = user wndmgr cmnctl2
+
+[resources]
+AppIcon_Calculator = res/calculator.bmp, no-compress
+
+[package]
+appid     = sdkcalc
+publisher = Bolt SDK Examples
+desktop   = default
+
+[registry]
+Software/sdkcalc/InstalledFrom = string:Bolt SDK</code></pre>
+<h2 id="application">[application]</h2>
+<p>What the application is. Required. Each of these reaches the code as a <code>BOLTAPP_*</code> definition in <code>boltapp.h</code>, which the build writes before it compiles anything; see <a href="resources-and-versions.html">Resources and versions</a>.</p>
+<table>
+<tr><th>Key</th><th></th><th>Default</th><th>Becomes</th></tr>
+<tr><td><code>name</code></td><td>required</td><td></td><td><code>BOLTAPP_NAME</code>: what the application is called, in its window and the Actions menu. At most 63 characters.</td></tr>
+<tr><td><code>module</code></td><td>required</td><td></td><td><code>BOLTAPP_MODULE</code>: the file's name on the machine, <code>&lt;module&gt;.bxf</code>, and its folder under <code>/programs</code>. Letters, digits, <code>-</code> and <code>_</code>. Two applications on one machine need two different ones.</td></tr>
+<tr><td><code>version</code></td><td></td><td><code>1.0.0.0</code></td><td><code>BOLTAPP_VERSION_MAJOR</code>, <code>_MINOR</code>, <code>_BUILD</code>, <code>_REVISION</code>: one to four numbers, each up to 65535.</td></tr>
+<tr><td><code>description</code></td><td></td><td>the name</td><td><code>BOLTAPP_DESCRIPTION</code>: the version manifest's description, which Properties shows.</td></tr>
+<tr><td><code>product</code></td><td></td><td>the name</td><td><code>BOLTAPP_PRODUCT</code>: the product it belongs to.</td></tr>
+<tr><td><code>copyright</code></td><td></td><td>empty</td><td><code>BOLTAPP_COPYRIGHT</code></td></tr>
+<tr><td><code>language</code></td><td></td><td><code>English</code></td><td><code>BOLTAPP_LANGUAGE</code></td></tr>
+<tr><td><code>icon</code></td><td></td><td>empty</td><td><code>BOLTAPP_ICON</code>: the name of a picture under <code>[resources]</code> that is the application's icon. Empty for none.</td></tr>
+</table>
+<p><code>BOLTAPP_FILENAME</code> is <code>&lt;module&gt;.bxf</code>, and <code>BOLTAPP_VERSION_STRING</code> the version written out.</p>
+<h2 id="build">[build]</h2>
+<p>How it is compiled. <code>sources</code> is required.</p>
+<table>
+<tr><th>Key</th><th>Default</th><th></th></tr>
+<tr><td><code>sdk</code></td><td>the latest</td><td>The Bolt API version to build against, which becomes <code>BOLTSDK_APIV</code>. An application asks for the oldest SDK that has what it needs, so it runs on the most systems. See <a href="compatibility.html">Compatibility</a>.</td></tr>
+<tr><td><code>sources</code></td><td></td><td>The C files, separated by spaces.</td></tr>
+<tr><td><code>imports</code></td><td><code>user</code></td><td>The system libraries to link against: <code>user</code>, <code>wndmgr</code>, <code>cmnctl</code>, <code>cmnctl2</code>, <code>psapi</code>, <code>netapi</code>, <code>boltshell</code>. Each header's page in the reference says which library it needs.</td></tr>
+<tr><td><code>defines</code></td><td></td><td>Extra preprocessor definitions, separated by spaces: <code>DEBUG_LOG FEATURE=2</code>.</td></tr>
+<tr><td><code>include</code></td><td></td><td>Extra folders to look for headers in, separated by spaces.</td></tr>
+</table>
+<p>Every source is compiled with <code>BOLTSDK_APIV</code>, <code>_USERMODE_APP</code>, and <code>_DEBUG</code> or <code>NDEBUG</code>, as C, freestanding: there are no system headers and no C runtime, only the SDK's <code>include</code> folder and the <a href="../api/crt.html">C library subset</a>. Debug builds are unoptimised and carry DWARF and CodeView; <code>--release</code> optimises (<code>/O2</code>, link-time optimisation, unused functions dropped).</p>
+<h2 id="resources">[resources]</h2>
+<p>The pictures the application carries, attached to its file after the link. One line each:</p>
+<pre><code>Name = path/to/picture.bmp
+Name = path/to/picture.bmp, no-compress, no-flip</code></pre>
+<p>The name is what the code asks for — <a href="../api/wndmgr.html#wndmgr_loadicon"><code>Wndmgr_LoadIcon</code></a>, <a href="../api/modres.html#userres_loadimage"><code>UserRes_LoadImage</code></a>. Pictures are 24-bit (or 1, 4 or 8-bit paletted) uncompressed <code>.bmp</code> files; magenta (255, 0, 255) is transparent. An application icon is 32 by 32 and named <code>AppIcon_</code> something.</p>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>no-compress</code></td><td>stored as it is rather than run-length compressed; for a picture that compresses badly</td></tr>
+<tr><td><code>no-flip</code></td><td>the bitmap's rows are already top-down; the usual bottom-up <code>.bmp</code> is flipped</td></tr>
+</table>
+<h2 id="sounds">[sounds]</h2>
+<p>The sounds the application carries, the same way:</p>
+<pre><code>Sound_Chime = res/chime.wav</code></pre>
+<p>A sound is a PCM <code>.wav</code>, converted to the mixer's rate as it is attached. The application registers it once with <a href="../api/modres.html#user_registersound"><code>User_RegisterSound</code></a>, then plays it by name with <a href="../api/user.html#user_playsound"><code>User_PlaySound</code></a>.</p>
+<h2 id="package">[package]</h2>
+<p>Present, and the build also writes <code>&lt;module&gt;.bxi</code>, an installer package; see <a href="packaging.html">Packaging</a>.</p>
+<table>
+<tr><th>Key</th><th>Default</th><th></th></tr>
+<tr><td><code>appid</code></td><td>the module</td><td>The application's identity: its folder under <code>/programs</code> and its key in the registry's list of what is installed. At most 31 characters.</td></tr>
+<tr><td><code>publisher</code></td><td><code>Unknown</code></td><td>Who made it, as the installer shows.</td></tr>
+<tr><td><code>version</code></td><td>the version</td><td>The version the installer shows.</td></tr>
+<tr><td><code>icon</code></td><td>the application's</td><td>The picture the installer and the links are drawn with.</td></tr>
+<tr><td><code>actions</code></td><td><code>yes</code></td><td>A link in the Actions menu.</td></tr>
+<tr><td><code>desktop</code></td><td><code>optional</code></td><td>A link on the desktop: <code>none</code>; <code>optional</code>, offered and unticked; <code>default</code>, offered and ticked; <code>always</code>, made without asking.</td></tr>
+<tr><td><code>files</code></td><td></td><td>Other files installed beside the application, as <code>host=installed</code> pairs: <code>data/levels.dat=levels.dat</code>.</td></tr>
+</table>
+<h2 id="registry">[registry]</h2>
+<p>Values the installer writes and takes away again on uninstall. Only under <code>Software/&lt;appid&gt;</code> in <code>REGHIVE_LOCALMACHINE</code>; the installer refuses anything else.</p>
+<pre><code>Software/sdkcalc/InstalledFrom = string:Bolt SDK
+Software/sdkcalc/Level         = dword:3</code></pre>
+<p>The key path and value name come before the <code>=</code>, the last component being the name; the type and value after it: <code>string:</code>, <code>qword:</code>, <code>dword:</code>, <code>word:</code> or <code>boolean:</code>. Numbers may be written in hex as <code>0x10</code>.</p>
+</main>
+</body>
+</html>

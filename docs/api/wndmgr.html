@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wndmgr.h — windows</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="wndmgrh-windows">wndmgr.h — windows</h1>
+<p><code>#include &lt;wndmgr.h&gt;</code> · exported by <strong>wndmgr.dll</strong> · link <strong><code>wndmgr.lib</code></strong></p>
+<p>The window manager owns every window on the screen: where it is, which one has the focus, the title bar and its buttons, dragging and resizing, and the backing surface each window is painted into. An application makes windows here and is told what happens to them through its window procedure (<a href="messages.html">messages</a>).</p>
+<p>An application stays running for as long as it has a window. Closing its last window ends it: <code>__modhalt</code> is called, and everything it still holds is freed.</p>
+<h2 id="a-windows-handle">A window's handle</h2>
+<p>A window is a <code>HANDLE</code>, and its state is in the handle's slots, read with <a href="user.html#user_getdataforhandle"><code>User_GetDataForHandle</code></a>:</p>
+<table>
+<tr><th>Slot</th><th>Holds</th></tr>
+<tr><td><code>WNDMGRHND_TYPE_WINDOWX</code>, <code>_WINDOWY</code></td><td>its position on the screen</td></tr>
+<tr><td><code>WNDMGRHND_TYPE_WINDOWW</code>, <code>_WINDOWH</code></td><td>its size, title bar included</td></tr>
+<tr><td><code>WNDMGRHND_TYPE_TEXT</code></td><td>its title, as a <code>PSTR</code></td></tr>
+<tr><td><code>WNDMGRHND_TYPE_ICON</code></td><td>its icon, as pixels</td></tr>
+<tr><td><code>WNDMGRHND_TYPE_FLAGS</code></td><td>its <code>WNDMGRHNDFLAGS_*</code></td></tr>
+<tr><td><code>WNDMGRHND_TYPE_MDID</code></td><td>the module it belongs to</td></tr>
+</table>
+<p>The title bar is <code>WNDMGR_TITLEH</code> (30) pixels tall, and the client area starts below it. A window is never smaller than 160 by 90.</p>
+<h2 id="flags">Flags</h2>
+<p>Passed to <a href="#wndmgr_createwindow"><code>Wndmgr_CreateWindow</code></a>; the window manager sets the rest itself.</p>
+<table>
+<tr><th>Flag</th><th>Effect</th></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NOTASKBARITEM</code></td><td>no entry on the taskbar</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NOMINIMIZE</code></td><td>no minimise button</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NOCLOSE</code></td><td>no close button</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NORESIZE</code></td><td>no edge to resize it by</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_CENTERTEXT</code></td><td>the title centred in the bar</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_DARKBKGRND</code></td><td>the darker client background</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_TOPMOST</code></td><td>drawn over every window but the focused one</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NOICON</code></td><td>no icon in the title bar (set when the icon is <code>NULL</code>)</td></tr>
+<tr><td><code>WNDMGRHNDFLAGS_NOAUTOPAINT</code></td><td>the window manager does not paint it on its own</td></tr>
+</table>
+<hr>
+<h2 id="making-and-closing-windows">Making and closing windows</h2>
+<h3 id="wndmgr_createwindow">Wndmgr_CreateWindow</h3>
+<pre><code>HANDLE Wndmgr_CreateWindow(WORD32 X, WORD32 Y, WORD32 W, WORD32 H,
+                           PSTR Title, PVOID Icon, WORD32 Flags);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_CreateWindow1</code> · SDK 10</p>
+<p>Opens a window belonging to the running application and gives it the focus. Called from <code>__modmain</code>, once for each window wanted.</p>
+<p>The window is driven by whichever procedure the application exports: <code>__WindowProcedure2</code> if it has one, which is what a new application writes, or the original <code>__WindowProcedure</code>. The first message it is sent is <code>MSG_INIT</code>, before it is first painted.</p>
+<ul>
+<li><code>X</code>, <code>Y</code>, <code>W</code>, <code>H</code> — position and size on the screen, the title bar included. Sizes below 160 by 90 are raised to them.</li>
+<li><code>Title</code> — kept, not copied: it must last as long as the window. A string literal, or the manifest's name.</li>
+<li><code>Icon</code> — 24-bit pixels, 24 by 24, as <a href="#wndmgr_loadicon"><code>Wndmgr_LoadIcon</code></a> makes them; kept, not copied. <code>NULL</code> for none.</li>
+<li><code>Flags</code> — <code>WNDMGRHNDFLAGS_*</code>, or zero.</li>
+<li><strong>Returns</strong> the window, or <strong>0</strong> — not <code>HANDLE_INVALID</code> — when the handle table is full.</li>
+</ul>
+<h3 id="wndmgr_closewindow">Wndmgr_CloseWindow</h3>
+<pre><code>void Wndmgr_CloseWindow(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_CloseWindow1</code> · SDK 10</p>
+<p>Closes a window, without asking it: <code>MSG_QUIT</code> is what the close button sends, and this is not the close button. An application closing its own window from code takes its controls down first (<a href="cmnctl2.html#cmnctl2_destroycontrols"><code>CmnCtl2_DestroyControls</code></a>).</p>
+<p>A close from inside a window procedure, or from the application whose window it is, happens after the current message returns, since the window and possibly the whole application are going away under it. If this was the application's last window, the application ends.</p>
+<h3 id="wndmgr_minimizewindow">Wndmgr_MinimizeWindow</h3>
+<pre><code>void Wndmgr_MinimizeWindow(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_MinimizeWindow1</code> · SDK 10</p>
+<p>Hides a window to its taskbar entry and gives the focus to one still showing.</p>
+<h3 id="wndmgr_bringforth">Wndmgr_BringForth</h3>
+<pre><code>VOID Wndmgr_BringForth(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_BringForth1</code> · SDK 10</p>
+<p>Gives a window the focus and the keyboard, which also puts it on top.</p>
+<h3 id="wndmgr_focusvisible">Wndmgr_FocusVisible</h3>
+<pre><code>void Wndmgr_FocusVisible(void);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_FocusVisible1</code> · SDK 10</p>
+<p>Moves the focus to a window that is showing. Making a window focuses it, so this is for after making one that is not meant to be looked at.</p>
+<h3 id="wndmgr_modulewindowcount">Wndmgr_ModuleWindowCount</h3>
+<pre><code>WORD32 Wndmgr_ModuleWindowCount(WORD32 ModuleId);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ModuleWindowCount1</code> · SDK 10</p>
+<p>How many windows a module has open. <code>ModuleId</code> is a process identifier, as <a href="psapi.html#ps_getcurrentprocess"><code>Ps_GetCurrentProcess</code></a> answers.</p>
+<h3 id="wndmgr_modulehaswindows">Wndmgr_ModuleHasWindows</h3>
+<pre><code>BOOL Wndmgr_ModuleHasWindows(WORD32 ModuleId);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ModuleHasWindows1</code> · SDK 10</p>
+<p>Whether a module has any window open.</p>
+<h3 id="wndmgr_closemodulewindows">Wndmgr_CloseModuleWindows</h3>
+<pre><code>void Wndmgr_CloseModuleWindows(WORD32 ModuleId);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_CloseModuleWindows1</code> · SDK 10</p>
+<p>Closes every window a module holds and leaves the module loaded. What something ending an application calls first, so no window outlives the code behind it. An application can reach only its own windows this way.</p>
+<hr>
+<h2 id="painting">Painting</h2>
+<h3 id="wndmgr_invalidatewindow">Wndmgr_InvalidateWindow</h3>
+<pre><code>void Wndmgr_InvalidateWindow(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_InvalidateWindow1</code> · SDK 10</p>
+<p>Marks a window as needing repainting, so it is sent <code>MSG_PAINT</code>. A window using the retained controls never needs this: every setter marks the window itself. An application drawing something of its own calls it when that changes — from a timer, say — and draws in <code>MSG_PAINT</code>.</p>
+<h3 id="wndmgr_getcolors">Wndmgr_GetColors</h3>
+<pre><code>PWNDMGR_COLORS Wndmgr_GetColors(void);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_GetColors1</code> · SDK 10</p>
+<p>The palette the system draws with, as a <code>WNDMGR_COLORS</code> the window manager owns: text, backgrounds, the accent, the taskbar's, the windows', the controls'. Read it; do not write it.</p>
+<pre><code>Ge_DrawText(16, WNDMGR_TITLEH + 16, &quot;Hello&quot;,
+            Wndmgr_GetColors()-&gt;TextColor, GEFONT_NORMAL);</code></pre>
+<h3 id="wndmgr_loadicon">Wndmgr_LoadIcon</h3>
+<pre><code>PVOID Wndmgr_LoadIcon(PSTR ResourceName, WORD32 Size);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_LoadIcon1</code> · SDK 10</p>
+<p>A picture the calling application carries, scaled to <code>Size</code> by <code>Size</code>, as 24-bit pixels in a block the caller owns. A name the application does not carry is looked for in the shell. Square sizes only; the title bar draws 24, the Actions menu 32. <strong>Returns</strong> <code>NULL</code> for a name nobody carries or an empty one.</p>
+<h3 id="wndmgr_loadiconfrom">Wndmgr_LoadIconFrom</h3>
+<pre><code>PVOID Wndmgr_LoadIconFrom(PSTR Opt_ModulePath, PSTR ResourceName, WORD32 Size);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_LoadIconFrom1</code> · SDK 10</p>
+<p>The same, out of the module a path names, which is how another application's icon is drawn without starting it. <code>NULL</code> is the calling application, as above.</p>
+<h3 id="wndmgr_setwindowcursor">Wndmgr_SetWindowCursor</h3>
+<pre><code>void Wndmgr_SetWindowCursor(HANDLE Window, WORD32 Cursor);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetWindowCursor1</code> · SDK 10</p>
+<p>What the pointer looks like over the window's client area, from then on: <code>CURSOR_POINT</code>, <code>CURSOR_ACTION</code> (the hand), <code>CURSOR_TEXT</code> (the I-beam), <code>CURSOR_WAIT</code>, or one of the resize shapes (<code>cursor.h</code>). Set it when it changes, not every frame.</p>
+<h3 id="wndmgr_drawwindow">Wndmgr_DrawWindow</h3>
+<pre><code>void Wndmgr_DrawWindow(HANDLE Window, BOOL WindowHasFocus);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_DrawWindow1</code> · SDK 10</p>
+<p>Draws a window's frame and title bar onto the screen as the window manager does each frame. The window manager calls it; an application has no reason to.</p>
+<hr>
+<h2 id="scrolling-a-window">Scrolling a window</h2>
+<p>A window whose contents are taller than it is can say so, and the window manager gives it a scroll bar, scrolls it with the wheel, and hands it paint and pointer messages in content coordinates. The application draws its whole layout at every size and lets the window manager decide what is on screen.</p>
+<h3 id="wndmgr_setcontentheight">Wndmgr_SetContentHeight</h3>
+<pre><code>VOID Wndmgr_SetContentHeight(HANDLE Window, WORD32 Height);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetContentHeight1</code> · SDK 10</p>
+<p>How tall the client area's contents are. Taller than the window, and the window grows a bar down its right edge. Zero turns scrolling off.</p>
+<h3 id="wndmgr_getscrolly">Wndmgr_GetScrollY</h3>
+<pre><code>WORD32 Wndmgr_GetScrollY(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_GetScrollY1</code> · SDK 10</p>
+<p>How far down its contents the window is looking, in pixels.</p>
+<h3 id="wndmgr_visiblewidth">Wndmgr_VisibleWidth</h3>
+<pre><code>WORD32 Wndmgr_VisibleWidth(HANDLE Window);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_VisibleWidth1</code> · SDK 10</p>
+<p>How wide the client area can be seen: the whole width, or up to the scroll bar while there is one. For laying out so nothing sits under the bar.</p>
+<hr>
+<h2 id="scroll-bars-by-hand">Scroll bars by hand</h2>
+<p>The geometry and the painter every scroll bar in the system uses, shared so a bar an application draws behaves like the others. Positions are in items, or pixels — whatever <code>Total</code> and <code>Visible</code> count. A bar is <code>WNDMGR_SCROLL_W</code> (14) pixels wide.</p>
+<pre><code>#define WNDMGR_SCROLLPART_NONE     0
+#define WNDMGR_SCROLLPART_UP       1
+#define WNDMGR_SCROLLPART_PAGEUP   2
+#define WNDMGR_SCROLLPART_THUMB    3
+#define WNDMGR_SCROLLPART_PAGEDOWN 4
+#define WNDMGR_SCROLLPART_DOWN     5</code></pre>
+<p><a href="cmnctl2.html#cmnctl2_createscrollbar"><code>CmnCtl2_CreateScrollBar</code></a> does all of this for you.</p>
+<h3 id="wndmgr_scrollneeded">Wndmgr_ScrollNeeded</h3>
+<pre><code>BOOL Wndmgr_ScrollNeeded(WORD32 Total, WORD32 Visible);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollNeeded1</code> · SDK 10</p>
+<p>Whether there is more than fits: <code>Total</code> greater than <code>Visible</code>.</p>
+<h3 id="wndmgr_scrollmax">Wndmgr_ScrollMax</h3>
+<pre><code>WORD32 Wndmgr_ScrollMax(WORD32 Total, WORD32 Visible);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollMax1</code> · SDK 10</p>
+<p>The furthest position: the one with the last item at the bottom. Zero when everything fits.</p>
+<h3 id="wndmgr_scrollclamp">Wndmgr_ScrollClamp</h3>
+<pre><code>WORD32 Wndmgr_ScrollClamp(WORD32 Total, WORD32 Visible, int Position);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollClamp1</code> · SDK 10</p>
+<p>A position brought back between zero and the furthest.</p>
+<h3 id="wndmgr_paintscrollbar">Wndmgr_PaintScrollBar</h3>
+<pre><code>VOID Wndmgr_PaintScrollBar(WORD32 X, WORD32 Y, WORD32 H, WORD32 Total,
+                           WORD32 Visible, WORD32 Position, BOOL Disabled);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_PaintScrollBar1</code> · SDK 10</p>
+<p>Draws a bar <code>H</code> tall at (<code>X</code>, <code>Y</code>): an arrow at each end and the thumb sized and placed for the position. Disabled, or with nothing to scroll, it is drawn flat with no thumb.</p>
+<h3 id="wndmgr_scrollpart">Wndmgr_ScrollPart</h3>
+<pre><code>WORD32 Wndmgr_ScrollPart(WORD32 Y, WORD32 H, WORD32 Total, WORD32 Visible,
+                         WORD32 Position, WORD32 PointY);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollPart1</code> · SDK 10</p>
+<p>Which part of a bar a point at height <code>PointY</code> is on: a <code>WNDMGR_SCROLLPART_*</code>.</p>
+<h3 id="wndmgr_scrollstep">Wndmgr_ScrollStep</h3>
+<pre><code>WORD32 Wndmgr_ScrollStep(WORD32 Part, WORD32 Total, WORD32 Visible,
+                         WORD32 Position);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollStep1</code> · SDK 10</p>
+<p>The position after a click on a part: one item for an arrow, a page for the track, clamped. The thumb leaves it where it is.</p>
+<h3 id="wndmgr_scrollgrab">Wndmgr_ScrollGrab</h3>
+<pre><code>WORD32 Wndmgr_ScrollGrab(WORD32 Y, WORD32 H, WORD32 Total, WORD32 Visible,
+                         WORD32 Position, WORD32 PointY);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollGrab1</code> · SDK 10</p>
+<p>Where on the thumb a press at <code>PointY</code> landed, to keep for the drag that follows.</p>
+<h3 id="wndmgr_scrollfrompoint">Wndmgr_ScrollFromPoint</h3>
+<pre><code>WORD32 Wndmgr_ScrollFromPoint(WORD32 Y, WORD32 H, WORD32 Total,
+                              WORD32 Visible, WORD32 Grab, WORD32 PointY);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ScrollFromPoint1</code> · SDK 10</p>
+<p>The position for the thumb dragged to <code>PointY</code>, with <code>Grab</code> from <a href="#wndmgr_scrollgrab"><code>Wndmgr_ScrollGrab</code></a>.</p>
+<hr>
+<h2 id="timers">Timers</h2>
+<h3 id="wndmgr_settimer">Wndmgr_SetTimer</h3>
+<pre><code>WORD32 Wndmgr_SetTimer(HANDLE Window, WORD32 IntervalMs);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetTimer1</code> · SDK 10</p>
+<p>Asks for <code>MSG_INTERVAL</code> every <code>IntervalMs</code> milliseconds, the first one interval from now. Checked once a frame, so it is a deadline rather than a promise. A window may hold <code>WNDMGR_MAX_TIMERS</code> (16), and the system 64.</p>
+<ul>
+<li><strong>Returns</strong> an identifier, carried in <code>Param1</code> of each <code>MSG_INTERVAL</code>, or 0 when there is no room or the interval is zero. Timers go with the window.</li>
+</ul>
+<h3 id="wndmgr_killtimer">Wndmgr_KillTimer</h3>
+<pre><code>void Wndmgr_KillTimer(HANDLE Window, WORD32 Id);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_KillTimer1</code> · SDK 10</p>
+<p>Stops a timer before its window closes. The window is named as well, so one window cannot stop another's by guessing.</p>
+<hr>
+<h2 id="the-desktop-and-the-shell">The desktop and the shell</h2>
+<p>These serve the shell and the controls, and are documented for completeness. An application has little reason to call them.</p>
+<h3 id="wndmgr_setdesktoppainter">Wndmgr_SetDesktopPainter</h3>
+<pre><code>VOID Wndmgr_SetDesktopPainter(PVOID Painter);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetDesktopPainter1</code> · SDK 10</p>
+<p>Registers what paints the background, called once a frame between the backdrop and the first window as <code>void Painter(WORD32 Width, WORD32 Height)</code>. There is one desktop and one painter, and the shell has it.</p>
+<h3 id="wndmgr_windowatpoint">Wndmgr_WindowAtPoint</h3>
+<pre><code>HANDLE Wndmgr_WindowAtPoint(WORD32 X, WORD32 Y);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_WindowAtPoint1</code> · SDK 10</p>
+<p>The window drawn on top at a point on the screen, or <code>HANDLE_INVALID</code>.</p>
+<h3 id="wndmgr_listwindowatpoint">Wndmgr_ListWindowAtPoint</h3>
+<pre><code>HANDLE Wndmgr_ListWindowAtPoint(WORD32 X, WORD32 Y);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_ListWindowAtPoint1</code> · SDK 10</p>
+<p>The window whose open drop-down list a point is on, where the list hangs past the window's edge, or <code>HANDLE_INVALID</code>.</p>
+<h3 id="wndmgr_setoverlay">Wndmgr_SetOverlay</h3>
+<pre><code>VOID Wndmgr_SetOverlay(WORD32 Count, const WORD16* Rects);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetOverlay1</code> · SDK 10</p>
+<p>What the shell draws over the windows — the taskbar, the Actions menu — as up to <code>WNDMGR_OVERLAY_MAX</code> (8) rectangles of four <code>WORD16</code>s each. A press on one is the shell's and no window's. The shell sets it every frame.</p>
+<h3 id="wndmgr_keysondesktop">Wndmgr_KeysOnDesktop</h3>
+<pre><code>BOOL Wndmgr_KeysOnDesktop(VOID);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_KeysOnDesktop1</code> · SDK 10</p>
+<p>Whether the keyboard belongs to the desktop: a press on empty desktop takes it from the focused window, which stays on top but is sent no keys.</p>
+<h3 id="wndmgr_getshellres">Wndmgr_GetShellRes</h3>
+<pre><code>PKMCTL_SHELLRES Wndmgr_GetShellRes(VOID);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_GetShellRes1</code> · SDK 10</p>
+<p>The shell's resources as the system keeps them — the cursors, the background, the clip — as a <code>KMCTL_SHELLRES</code>. Read, not written.</p>
+<h3 id="wndmgr_setclips">Wndmgr_SetClips</h3>
+<pre><code>VOID Wndmgr_SetClips(WORD32 X, WORD32 Y, WORD32 W, WORD32 H);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_SetClips1</code> · SDK 10</p>
+<p>Sets the rectangle the window manager holds for the window it is drawing, for the original immediate-mode controls. Drawing is clipped with <a href="graphics.html#ge_setclip"><code>Ge_SetClip</code></a>.</p>
+<h3 id="wndmgr_getwindowdata">Wndmgr_GetWindowData</h3>
+<pre><code>VOID Wndmgr_GetWindowData(PWORD16 MouseX, PWORD16 MouseY, PBOOL LeftButton);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_GetWindowData1</code> · SDK 10</p>
+<p>The pointer as the window being drawn was handed it, for the immediate-mode controls. <code>MouseX</code> and <code>MouseY</code> must not be <code>NULL</code>; <code>LeftButton</code> may be.</p>
+<h3 id="wndmgr_requestspecialobject">Wndmgr_RequestSpecialObject</h3>
+<pre><code>PVOID Wndmgr_RequestSpecialObject(VOID);</code></pre>
+<p>wndmgr.dll · export <code>Wndmgr_RequestSpecialObject1</code> · SDK 10</p>
+<p>A pointer to the window manager's own state, for the controls library. Its layout is not part of the API and changes between builds; an application must not read it.</p>
+</main>
+</body>
+</html>

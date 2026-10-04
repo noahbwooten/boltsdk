@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="getting-started">Getting started</h1>
+<p>This builds the calculator, runs it, and then makes an application of your own. It assumes <a href="../setup.html">Setting up</a> is done. Commands are given for Windows; on Debian and macOS, <code>./build.sh</code> and <code>./run.sh</code> take the same arguments.</p>
+<h2 id="build-the-calculator">Build the calculator</h2>
+<p>From the SDK's folder:</p>
+<pre><code>build.cmd examples\calc</code></pre>
+<pre><code>SDK Calculator 1.0.0.0, debug, Bolt SDK 10
+  toolchain    C:\Program Files\LLVM\bin\clang-cl.exe
+  src\main.c
+  src\calc.c
+  sdkcalc.bxf  19020 bytes
+  carries      1 resources, 3636 bytes
+  sdkcalc.bxi  7606 bytes
+
+built examples\calc\out\debug\sdkcalc.bxf</code></pre>
+<p>That compiled the two sources against the SDK's headers, linked them against <code>user.lib</code>, <code>wndmgr.lib</code> and <code>cmnctl2.lib</code>, checked that the file says it is version 1.0.0.0 and was built for SDK 10, attached the calculator's icon to it, and wrote an installer package beside it.</p>
+<h2 id="run-it">Run it</h2>
+<pre><code>run.cmd examples\calc</code></pre>
+<p>This puts the calculator on the machine's disk, in <code>/programs/sdkcalc/sdkcalc.bxf</code>, with a link at the top of the Actions menu, and starts the machine in a window. When the desktop is up, open <strong>Actions</strong> and choose <strong>SDK Calculator</strong>. Type <code>12+30=</code> and it answers 42.</p>
+<p>Close the machine's window to stop it. The disk is kept, so the next <code>run.cmd</code> starts where this one left off; <code>run.cmd --clean</code> starts from a fresh one.</p>
+<h2 id="install-it-the-other-way">Install it the other way</h2>
+<p>The build also made <code>sdkcalc.bxi</code>, the calculator as an installer package:</p>
+<pre><code>run.cmd --clean examples\calc\out\debug\sdkcalc.bxi</code></pre>
+<p><code>--clean</code> starts from a fresh disk, which is the machine somebody else would have. The package is on the desktop. Double-click it and the installer offers to install the calculator into <code>/programs/sdkcalc</code>, with links in the Actions menu and on the desktop; <strong>Next</strong>, <strong>Install</strong>, and it is there. That is how somebody else would install your application.</p>
+<h2 id="make-your-own">Make your own</h2>
+<p>Copy <code>examples\empty</code> to a folder of your own — anywhere; it need not be in the SDK:</p>
+<pre><code>xcopy /e /i examples\empty C:\work\hello</code></pre>
+<p>Open <code>C:\work\hello\app.ini</code> and change the <code>[application]</code> section. <code>module</code> is the file's name on the machine, so it must be different from every other application's:</p>
+<pre><code>[application]
+name        = Hello
+module      = hello
+version     = 0.1.0.0
+description = Hello
+product     = Hello
+copyright   = Copyright (c) You 2026
+icon        =</code></pre>
+<p>Build it and run it, naming the folder:</p>
+<pre><code>build.cmd C:\work\hello
+run.cmd C:\work\hello</code></pre>
+<p><strong>Hello</strong> is in the Actions menu, and opens a window with a line of text in it.</p>
+<h2 id="what-to-change-next">What to change next</h2>
+<p><code>src\main.c</code> is the whole application. It has the five things every application has — the two manifests, <code>__modres</code>, <code>__modmain</code>, and a window procedure — each commented with what it is for. <a href="application-model.html">How an application runs</a> explains them.</p>
+<p>From there:</p>
+<ul>
+<li><strong>Controls.</strong> Add buttons, text boxes, tables and trees with the <a href="../api/cmnctl2.html">retained controls</a>: make them in <code>MSG_INIT</code>, paint them in <code>MSG_PAINT</code>, and ask <code>CmnCtl2_WasClicked</code> after <code>CmnCtl2_Dispatch</code>. Add <code>cmnctl2</code> to <code>imports</code> in app.ini. The calculator is a whole example.</li>
+<li><strong>An icon.</strong> Draw a 32 by 32 bitmap, add it under <code>[resources]</code> as <code>AppIcon_Hello</code>, and set <code>icon = AppIcon_Hello</code>. See <a href="resources-and-versions.html">Resources and versions</a>.</li>
+<li><strong>A package.</strong> Add a <code>[package]</code> section, and the build writes an installer beside the application. See <a href="packaging.html">Packaging</a>.</li>
+<li><strong>Settings.</strong> Keep preferences in the registry, under <code>REGHIVE_LOCALCONFIGURATION</code>. See <a href="../api/registry.html">registry.h</a>.</li>
+<li><strong>Files.</strong> The file calls are in <a href="../api/user.html#files">user.h</a>. Keep an application's own files in its folder under <code>/programs</code>.</li>
+</ul>
+<h2 id="editing-with-an-editor">Editing with an editor</h2>
+<p>The build writes <code>out\debug\compile_commands.json</code>, which tells an editor exactly how each file was compiled — the defines, <code>BOLTSDK_APIV</code>, and where the headers are. Point clangd, or Visual Studio Code's C/C++ extension, at it and completion and errors match the build.</p>
+</main>
+</body>
+</html>

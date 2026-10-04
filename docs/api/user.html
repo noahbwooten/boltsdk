@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>user.h — the core</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="userh-the-core">user.h — the core</h1>
+<p><code>#include &lt;user.h&gt;</code> · exported by <strong>user.dll</strong> · link <strong><code>user.lib</code></strong></p>
+<p>Everything an application does that is not drawing a control goes through here: handles, memory, the clocks, the keyboard and the pointer, files and folders, sound, the system's version, services, the command line, and the three ways to say that something is in use. Every application includes this header, and it brings <code>wndproc2.h</code> (the window messages) and <code>modres.h</code> (what a module carries) with it.</p>
+<p>Each function is listed under the name an application writes. Built against the SDK, that name calls the numbered export shown beside it, which is the one that never changes; see <a href="../guide/compatibility.html">Compatibility</a>.</p>
+<p>Unless an entry says otherwise, a function that fails records why in the last error, which <a href="#user_getlasterror"><code>User_GetLastError</code></a> reads back; the values are the <code>ERROR_*</code> codes in <a href="types.html#errors">Types and errors</a>.</p>
+<hr>
+<h2 id="handles">Handles</h2>
+<p>A <code>HANDLE</code> names something the system holds for an application: a window, a file, a control, a mutex. It is an opaque number, not a pointer, and <code>HANDLE_INVALID</code> is the value every call answers with when it could not make one. A handle belongs to the module that was running when it was made, and an application can reach only its own: another application's handle reads as invalid rather than as refused.</p>
+<p>A handle also carries numbered slots, which is where windows keep their geometry (<code>WNDMGRHND_TYPE_*</code> in <a href="wndmgr.html">wndmgr.h</a>) and where an application may keep values of its own on a handle it made.</p>
+<h3 id="user_createhandle">User_CreateHandle</h3>
+<pre><code>HANDLE User_CreateHandle(BYTE HandleType, PWORD32 HandleData, int DataCount);</code></pre>
+<p>user.dll · export <code>User_CreateHandle1</code> · SDK 10</p>
+<p>Makes a handle of the given type, owned by the calling application, with its first <code>DataCount</code> slots copied from <code>HandleData</code>. An application making a handle for its own bookkeeping uses <code>HANDLETYPE_GENERIC</code>; the other types belong to the calls that make them.</p>
+<ul>
+<li><code>HandleType</code> — a <code>HANDLETYPE_*</code> value.</li>
+<li><code>HandleData</code> — the initial slot values, or <code>NULL</code> when <code>DataCount</code> is 0.</li>
+<li><code>DataCount</code> — how many to copy, at most 32; more are ignored.</li>
+<li><strong>Returns</strong> the handle, or <code>HANDLE_INVALID</code> when the system's handle table is full (16384 handles, at which point something is leaking them).</li>
+</ul>
+<h3 id="user_destroyhandle">User_DestroyHandle</h3>
+<pre><code>VOID User_DestroyHandle(HANDLE Handle);</code></pre>
+<p>user.dll · export <code>User_DestroyHandle1</code> · SDK 10</p>
+<p>Gives a handle back. A file handle is closed by this. The value must not be used afterwards, since the slot it names is handed out again.</p>
+<p>Sets <code>ERROR_INVALID_HANDLE</code> and does nothing for a handle that is not valid or not the caller's.</p>
+<h3 id="user_ishandlevalid">User_IsHandleValid</h3>
+<pre><code>BOOL User_IsHandleValid(HANDLE Handle);</code></pre>
+<p>user.dll · export <code>User_IsHandleValid1</code> · SDK 10</p>
+<p>Whether a handle is live and reachable by the caller. Another application's handle answers <code>FALSE</code>. A window procedure runs on the window manager's behalf and can reach every handle; see the <a href="../guide/application-model.html#frames">application model</a>.</p>
+<h3 id="user_getdataforhandle">User_GetDataForHandle</h3>
+<pre><code>WORDPTR User_GetDataForHandle(HANDLE Handle, WORD32 Position);</code></pre>
+<p>user.dll · export <code>User_GetDataForHandle1</code> · SDK 10</p>
+<p>Reads one slot of a handle. A slot that was never written reads as zero.</p>
+<ul>
+<li><code>Position</code> — the slot, below 512. A window's are <code>WNDMGRHND_TYPE_*</code>: <code>User_GetDataForHandle(Window, WNDMGRHND_TYPE_WINDOWW)</code> is its width.</li>
+<li><strong>Returns</strong> the value, or 0 with <code>ERROR_INVALID_HANDLE</code> or <code>ERROR_INVALID_ARGUMENT</code> set.</li>
+</ul>
+<h3 id="user_setdataforhandle">User_SetDataForHandle</h3>
+<pre><code>VOID User_SetDataForHandle(HANDLE Handle, WORD32 Position, WORDPTR Data);</code></pre>
+<p>user.dll · export <code>User_SetDataForHandle1</code> · SDK 10</p>
+<p>Writes one slot of a handle. Slots past the first 32 are made the first time they are written. Writing a window's geometry slots changes what the window manager believes about it, which is how an application resizes its own window from code.</p>
+<p>Sets <code>ERROR_INVALID_HANDLE</code>, <code>ERROR_INVALID_ARGUMENT</code> for a position of 512 or more, or <code>ERROR_MEMORY_FAILURE</code>.</p>
+<hr>
+<h2 id="indivisible-operations">Indivisible operations</h2>
+<p>One instruction each, none of them a call into the kernel. For a counter that an interrupt, a timer callback or another application's frame might touch in the middle of a read, a sum and a write. Add and exchange answer with the value that was there before; increment and decrement answer with the value after, since a caller of those is usually asking whether it reached zero. A <code>NULL</code> pointer answers 0 (or <code>FALSE</code>) and touches nothing.</p>
+<h3 id="useratomic_read">UserAtomic_Read</h3>
+<pre><code>WORD32 UserAtomic_Read(volatile WORD32* Where);</code></pre>
+<p>user.dll · export <code>UserAtomic_Read1</code> · SDK 10</p>
+<p>The value at <code>Where</code>, read in one access.</p>
+<h3 id="useratomic_increment">UserAtomic_Increment</h3>
+<pre><code>WORD32 UserAtomic_Increment(volatile WORD32* Where);</code></pre>
+<p>user.dll · export <code>UserAtomic_Increment1</code> · SDK 10</p>
+<p>Adds one. <strong>Returns</strong> the value after.</p>
+<h3 id="useratomic_decrement">UserAtomic_Decrement</h3>
+<pre><code>WORD32 UserAtomic_Decrement(volatile WORD32* Where);</code></pre>
+<p>user.dll · export <code>UserAtomic_Decrement1</code> · SDK 10</p>
+<p>Takes one away. <strong>Returns</strong> the value after.</p>
+<h3 id="useratomic_add">UserAtomic_Add</h3>
+<pre><code>WORD32 UserAtomic_Add(volatile WORD32* Where, WORD32 Value);</code></pre>
+<p>user.dll · export <code>UserAtomic_Add1</code> · SDK 10</p>
+<p>Adds <code>Value</code>, wrapping as unsigned arithmetic does. <strong>Returns</strong> the value before.</p>
+<h3 id="useratomic_exchange">UserAtomic_Exchange</h3>
+<pre><code>WORD32 UserAtomic_Exchange(volatile WORD32* Where, WORD32 Value);</code></pre>
+<p>user.dll · export <code>UserAtomic_Exchange1</code> · SDK 10</p>
+<p>Writes <code>Value</code>. <strong>Returns</strong> the value before.</p>
+<h3 id="useratomic_compareexchange">UserAtomic_CompareExchange</h3>
+<pre><code>BOOL UserAtomic_CompareExchange(volatile WORD32* Where, PWORD32 Expected,
+                                WORD32 Value);</code></pre>
+<p>user.dll · export <code>UserAtomic_CompareExchange1</code> · SDK 10</p>
+<p>Writes <code>Value</code> only if <code>*Where</code> still equals <code>*Expected</code>. Either way, <code>*Expected</code> is replaced by what was found, so a loop does not have to read again at the top.</p>
+<ul>
+<li><strong>Returns</strong> <code>TRUE</code> if it wrote.</li>
+</ul>
+<hr>
+<h2 id="mutexes">Mutexes</h2>
+<p>Ownership of something across frames, by name, so that two applications reach the same one without either having had to create it. In a machine with one line of execution this says that a thing is in use; it does not make a sequence indivisible, since another application only ever runs between this one's frames. Single instance, a file open for editing, a long operation under way.</p>
+<p>Mutexes are recursive: the owner taking it again succeeds and must release it as many times. There are 64 named objects (mutexes and events together) in the machine.</p>
+<p>No wait is longer than <code>USER_WAIT_LONGEST</code> (2000 ms), whatever is asked for. An application waiting for a lock that another application holds is waiting for something that cannot run until it returns, so the wait is a formality and the answer is no. Prefer <a href="#user_trymutex"><code>User_TryMutex</code></a>.</p>
+<h3 id="user_createmutex">User_CreateMutex</h3>
+<pre><code>HANDLE User_CreateMutex(PSTR Name);</code></pre>
+<p>user.dll · export <code>User_CreateMutex1</code> · SDK 10</p>
+<p>Opens the mutex with this name, creating it if nothing has. Two applications opening one name get the same mutex.</p>
+<ul>
+<li><strong>Returns</strong> a handle to it, or <code>HANDLE_INVALID</code> with <code>ERROR_OUT_OF_RESOURCES</code> when every named object is in use.</li>
+</ul>
+<h3 id="user_trymutex">User_TryMutex</h3>
+<pre><code>BOOL User_TryMutex(HANDLE Mutex);</code></pre>
+<p>user.dll · export <code>User_TryMutex1</code> · SDK 10</p>
+<p>Takes the mutex if it is free, and never waits. <strong>Returns</strong> <code>TRUE</code> if the caller now holds it. The one to use.</p>
+<h3 id="user_acquiremutex">User_AcquireMutex</h3>
+<pre><code>BOOL User_AcquireMutex(HANDLE Mutex, WORD32 TimeoutMs);</code></pre>
+<p>user.dll · export <code>User_AcquireMutex1</code> · SDK 10</p>
+<p>Takes the mutex, waiting up to <code>TimeoutMs</code> (never more than <code>USER_WAIT_LONGEST</code>). <strong>Returns</strong> <code>FALSE</code> on expiry, which is an answer and not a failure of the call.</p>
+<h3 id="user_releasemutex">User_ReleaseMutex</h3>
+<pre><code>VOID User_ReleaseMutex(HANDLE Mutex);</code></pre>
+<p>user.dll · export <code>User_ReleaseMutex1</code> · SDK 10</p>
+<p>Releases one hold. The mutex is free when every hold has been released.</p>
+<h3 id="user_mutexheld">User_MutexHeld</h3>
+<pre><code>BOOL User_MutexHeld(HANDLE Mutex);</code></pre>
+<p>user.dll · export <code>User_MutexHeld1</code> · SDK 10</p>
+<p>Whether anything holds the mutex at this moment, without taking it.</p>
+<h3 id="user_destroymutex">User_DestroyMutex</h3>
+<pre><code>VOID User_DestroyMutex(HANDLE Mutex);</code></pre>
+<p>user.dll · export <code>User_DestroyMutex1</code> · SDK 10</p>
+<p>Gives the handle back, releasing the mutex first if the caller holds it. The named object itself goes when nothing holds a handle to it.</p>
+<hr>
+<h2 id="events">Events</h2>
+<p>Something that was started has finished. An auto-reset event clears on the read that sees it, so one completion tells exactly one reader; a manual one stays set until cleared, which is what a state wants. Poll is what almost every application should use: it asks once and carries on with its frame.</p>
+<h3 id="user_createevent">User_CreateEvent</h3>
+<pre><code>HANDLE User_CreateEvent(PSTR Name, BOOL AutoReset);</code></pre>
+<p>user.dll · export <code>User_CreateEvent1</code> · SDK 10</p>
+<p>Opens the event with this name, creating it clear if nothing has. <code>AutoReset</code> is used only when this call creates it.</p>
+<ul>
+<li><strong>Returns</strong> the handle, or <code>HANDLE_INVALID</code> with <code>ERROR_OUT_OF_RESOURCES</code>.</li>
+</ul>
+<h3 id="user_setevent">User_SetEvent</h3>
+<pre><code>VOID User_SetEvent(HANDLE Event);</code></pre>
+<p>user.dll · export <code>User_SetEvent1</code> · SDK 10</p>
+<p>Sets the event.</p>
+<h3 id="user_clearevent">User_ClearEvent</h3>
+<pre><code>VOID User_ClearEvent(HANDLE Event);</code></pre>
+<p>user.dll · export <code>User_ClearEvent1</code> · SDK 10</p>
+<p>Clears the event.</p>
+<h3 id="user_pollevent">User_PollEvent</h3>
+<pre><code>BOOL User_PollEvent(HANDLE Event);</code></pre>
+<p>user.dll · export <code>User_PollEvent1</code> · SDK 10</p>
+<p>Whether the event is set, without waiting. An auto-reset event that answers <code>TRUE</code> is cleared by the asking.</p>
+<h3 id="user_waitevent">User_WaitEvent</h3>
+<pre><code>BOOL User_WaitEvent(HANDLE Event, WORD32 TimeoutMs);</code></pre>
+<p>user.dll · export <code>User_WaitEvent1</code> · SDK 10</p>
+<p>Waits up to <code>TimeoutMs</code> (never more than <code>USER_WAIT_LONGEST</code>) for the event to be set. For an event set by the kernel or a device; an event set by another application cannot be set while this one waits. <strong>Returns</strong> <code>FALSE</code> on expiry.</p>
+<h3 id="user_destroyevent">User_DestroyEvent</h3>
+<pre><code>VOID User_DestroyEvent(HANDLE Event);</code></pre>
+<p>user.dll · export <code>User_DestroyEvent1</code> · SDK 10</p>
+<p>Gives the handle back.</p>
+<hr>
+<h2 id="memory">Memory</h2>
+<p>The heap is the system's, and every block is recorded against the application that was running when it was allocated. When an application ends, whatever it still holds is freed with it, so a leak lasts as long as the application and no longer. Task Manager shows the total.</p>
+<h3 id="user_allocate">User_Allocate</h3>
+<pre><code>PVOID User_Allocate(WORD32 Size);</code></pre>
+<p>user.dll · export <code>User_Allocate1</code> · SDK 10</p>
+<p>Allocates <code>Size</code> bytes. The block is not cleared.</p>
+<ul>
+<li><strong>Returns</strong> the block, or <code>NULL</code> with <code>ERROR_MEMORY_FAILURE</code> set.</li>
+</ul>
+<h3 id="user_free">User_Free</h3>
+<pre><code>VOID User_Free(PVOID Pointer);</code></pre>
+<p>user.dll · export <code>User_Free1</code> · SDK 10</p>
+<p>Frees a block. An application frees only what it allocated: a pointer that is not one of its blocks is refused with <code>ERROR_INVALID_ARGUMENT</code>, and <code>NULL</code> is refused the same way.</p>
+<h3 id="user_reallocate">User_Reallocate</h3>
+<pre><code>PVOID User_Reallocate(PVOID Existing, WORD32 Size);</code></pre>
+<p>user.dll · export <code>User_Reallocate1</code> · SDK 10</p>
+<p>Changes a block's size, keeping its contents up to the smaller of the two sizes. The block may move.</p>
+<ul>
+<li><strong>Returns</strong> the block, or <code>NULL</code> with <code>ERROR_MEMORY_FAILURE</code> set, in which case <code>Existing</code> is untouched and still the caller's.</li>
+</ul>
+<hr>
+<h2 id="time">Time</h2>
+<p>The machine's clock counts seconds since 1970, and keeps local time rather than UTC, so a reading turns straight into the date the taskbar shows.</p>
+<pre><code>typedef struct _UTM {
+    unsigned short Year;
+    unsigned char Month, Day, Hour, Minute, Second;
+} UTM, *PUTM;</code></pre>
+<h3 id="user_getktime">User_GetKTime</h3>
+<pre><code>WORD32 User_GetKTime(PWORD32 Opt_OutTime);</code></pre>
+<p>user.dll · export <code>User_GetKTime1</code> · SDK 10</p>
+<p>The clock, in seconds since 1970.</p>
+<ul>
+<li><code>Opt_OutTime</code> — receives the same value when not <code>NULL</code>.</li>
+<li><strong>Returns</strong> the time.</li>
+</ul>
+<h3 id="user_localizetime">User_LocalizeTime</h3>
+<pre><code>VOID User_LocalizeTime(WORD32 Time, PUTM OutTime);</code></pre>
+<p>user.dll · export <code>User_LocalizeTime1</code> · SDK 10</p>
+<p>Breaks a time in seconds into a date and a time of day, applying the zone and daylight saving set in System Control. A time of zero is refused with <code>ERROR_INVALID_ARGUMENT</code> and <code>OutTime</code> is left alone, since zero is a file that never recorded one.</p>
+<h3 id="user_zulutime">User_ZuluTime</h3>
+<pre><code>VOID User_ZuluTime(WORD32 Time, PUTM OutPut);</code></pre>
+<p>user.dll · export <code>User_ZuluTime1</code> · SDK 10</p>
+<p>Breaks a time into its parts the same way as <a href="#user_localizetime"><code>User_LocalizeTime</code></a>. In SDK 10 the two answer the same: the machine keeps one clock, in local time.</p>
+<h3 id="user_getmstime">User_GetMsTime</h3>
+<pre><code>WORD32 User_GetMsTime(VOID);</code></pre>
+<p>user.dll · export <code>User_GetMsTime1</code> · SDK 10</p>
+<p>A millisecond count from an arbitrary point, for measuring rather than for telling the time. It wraps after about seven weeks, so the difference between two readings is meaningful and a single reading is not.</p>
+<hr>
+<h2 id="keyboard-and-pointer">Keyboard and pointer</h2>
+<p>A key code names a key, not a character: a letter's code is its capital and a digit's is the digit, whatever Shift says, so <code>&#x27;A&#x27;</code> is 0x41 and <code>&#x27;1&#x27;</code> is 0x31. The mouse buttons share the space at the bottom, as <code>MSGKEY_LBUTTON</code> (1) and <code>MSGKEY_RBUTTON</code> (2). The rest:</p>
+<table>
+<tr><th>Key</th><th>Code</th></tr>
+<tr><td>Backspace, Tab</td><td>8, 9</td></tr>
+<tr><td>Return (either)</td><td>13</td></tr>
+<tr><td>Shift</td><td>16 left, 161 right</td></tr>
+<tr><td>Control</td><td>17 left, 163 right</td></tr>
+<tr><td>Alt</td><td>18 left, 165 right</td></tr>
+<tr><td>Caps Lock</td><td>20</td></tr>
+<tr><td>Escape</td><td>27</td></tr>
+<tr><td>Space</td><td>32</td></tr>
+<tr><td>Page Up, Page Down</td><td>33, 34</td></tr>
+<tr><td>End, Home</td><td>35, 36</td></tr>
+<tr><td>Left, Up, Right, Down</td><td>37, 38, 39, 40</td></tr>
+<tr><td>Insert, Delete</td><td>45, 46</td></tr>
+<tr><td>F1 to F12</td><td>112 to 123</td></tr>
+<tr><td>semicolon, equals, comma, minus, full stop, slash</td><td>186 to 191</td></tr>
+<tr><td>backquote</td><td>192</td></tr>
+<tr><td>open bracket, backslash, close bracket, quote</td><td>219 to 222</td></tr>
+</table>
+<p>The keypad depends on the keyboard. A USB keyboard gives the keypad's own digits, 96 to 105; a PS/2 keyboard gives the navigation codes above, as if Num Lock were off. The character a key types arrives separately, as <a href="messages.html"><code>MSG_CHAR</code></a>.</p>
+<p>There are two kinds of question. <em>Is it down now</em> is sampled once a frame. <em>Did it go down since last frame</em> is collected in the interrupt, so a key struck and released inside one frame is still seen. A window procedure is told about input as messages (<a href="messages.html"><code>MSG_KEYDOWN</code>, <code>MSG_CHAR</code></a>) and rarely needs any of these.</p>
+<h3 id="user_getkeystate">User_GetKeyState</h3>
+<pre><code>BOOL User_GetKeyState(WORD8 KeyCode);</code></pre>
+<p>user.dll · export <code>User_GetKeyState1</code> · SDK 10</p>
+<p>Whether a key is held down this frame.</p>
+<h3 id="user_getkeyboardstate">User_GetKeyboardState</h3>
+<pre><code>VOID User_GetKeyboardState(PWORD8 Buffer);</code></pre>
+<p>user.dll · export <code>User_GetKeyboardState1</code> · SDK 10</p>
+<p>All 256 key states in one call, one byte each, non-zero for down. <code>Buffer</code> must hold 256 bytes. One call a frame instead of 256.</p>
+<h3 id="user_waskeypressed">User_WasKeyPressed</h3>
+<pre><code>BOOL User_WasKeyPressed(WORD8 KeyCode);</code></pre>
+<p>user.dll · export <code>User_WasKeyPressed1</code> · SDK 10</p>
+<p>Whether a key went down since the last frame. Valid for one frame: ask every frame or not at all.</p>
+<h3 id="user_waskeyreleased">User_WasKeyReleased</h3>
+<pre><code>BOOL User_WasKeyReleased(WORD8 KeyCode);</code></pre>
+<p>user.dll · export <code>User_WasKeyReleased1</code> · SDK 10</p>
+<p>Whether a key came up since the last frame.</p>
+<h3 id="user_wasbuttonpressed">User_WasButtonPressed</h3>
+<pre><code>BOOL User_WasButtonPressed(WORD8 Button);</code></pre>
+<p>user.dll · export <code>User_WasButtonPressed1</code> · SDK 10</p>
+<p>Whether a mouse button went down since the last frame. <code>Button</code> is <code>MSGKEY_LBUTTON</code> or <code>MSGKEY_RBUTTON</code>.</p>
+<h3 id="user_wasbuttonreleased">User_WasButtonReleased</h3>
+<pre><code>BOOL User_WasButtonReleased(WORD8 Button);</code></pre>
+<p>user.dll · export <code>User_WasButtonReleased1</code> · SDK 10</p>
+<p>Whether a mouse button came up since the last frame.</p>
+<h3 id="user_getbuttonstate">User_GetButtonState</h3>
+<pre><code>BOOL User_GetButtonState(WORD8 Button);</code></pre>
+<p>user.dll · export <code>User_GetButtonState1</code> · SDK 10</p>
+<p>Whether one mouse button is held: <code>MSGKEY_LBUTTON</code> (1) or <code>MSGKEY_RBUTTON</code> (2). Any other value answers <code>FALSE</code>.</p>
+<h3 id="user_getclickstate">User_GetClickState</h3>
+<pre><code>BOOL User_GetClickState(WORD8 ClickCode);</code></pre>
+<p>user.dll · export <code>User_GetClickState1</code> · SDK 10</p>
+<p>Whether <em>any</em> mouse button is held, whatever <code>ClickCode</code> says. Kept for applications written before <a href="#user_getbuttonstate"><code>User_GetButtonState</code></a>, which is the one to use.</p>
+<h3 id="user_getmouseposition">User_GetMousePosition</h3>
+<pre><code>VOID User_GetMousePosition(PWORD16 MouseX, PWORD16 MouseY);</code></pre>
+<p>user.dll · export <code>User_GetMousePosition1</code> · SDK 10</p>
+<p>Where the pointer is, in screen coordinates, both halves from the same frame. Either pointer may be <code>NULL</code>.</p>
+<h3 id="user_getwheeltotal">User_GetWheelTotal</h3>
+<pre><code>long User_GetWheelTotal(VOID);</code></pre>
+<p>user.dll · export <code>User_GetWheelTotal1</code> · SDK 10</p>
+<p>Wheel notches since the machine started, positive away from the user. A total rather than a change, so a caller keeps the last reading and subtracts, and several readers each see every notch.</p>
+<h3 id="user_inputlost">User_InputLost</h3>
+<pre><code>WORD32 User_InputLost(VOID);</code></pre>
+<p>user.dll · export <code>User_InputLost1</code> · SDK 10</p>
+<p>How many key and button transitions were dropped between this frame and the last. Zero unless the machine stopped for longer than the input ring is deep.</p>
+<h3 id="user_bufferkeystate">User_BufferKeyState</h3>
+<pre><code>VOID User_BufferKeyState(WORD8 KeyCode, BOOL State);</code></pre>
+<p>user.dll · export <code>User_BufferKeyState1</code> · SDK 10</p>
+<p>Sets the state the system holds for a key, as though it had been pressed or released. For an application that has acted on a key and wants it seen as up, so it is not acted on again.</p>
+<h3 id="user_bufferclickstate">User_BufferClickState</h3>
+<pre><code>VOID User_BufferClickState(WORD8 ClickCode, BOOL State);</code></pre>
+<p>user.dll · export <code>User_BufferClickState1</code> · SDK 10</p>
+<p>Sets the state the system holds for a mouse button. <code>ClickCode</code> here counts from zero (0 is the left button). The common use is <code>User_BufferClickState(0, FALSE)</code> after acting on a click, so the press that opened something does not also land in it.</p>
+<h3 id="user_buffermouseposition">User_BufferMousePosition</h3>
+<pre><code>VOID User_BufferMousePosition(WORD16 MouseX, WORD16 MouseY);</code></pre>
+<p>user.dll · export <code>User_BufferMousePosition1</code> · SDK 10</p>
+<p>Sets where the system believes the pointer is, until the next movement of the real one.</p>
+<hr>
+<h2 id="files">Files</h2>
+<p>Paths are absolute, separated by <code>/</code>, and matched without regard to case: <code>/users/default/desktop/notes.txt</code>. The volume is BDFS3; see <a href="types.html#folders">folders.h</a> for where things live.</p>
+<p>A file handle has a cursor, which reads and writes start at and move. Sizes and positions are 64-bit throughout: the calls ending in <code>2</code> take and return them at full width, and the three without it are the same calls seen through a 32-bit window, kept for applications written before.</p>
+<pre><code>#define USER_FILEACCESS_READ   1
+#define USER_FILEACCESS_WRITE  2
+#define USER_FILEACCESS_DELETE 4
+#define USER_FILEACCESS_CREATE 8
+
+#define USER_FILECSRPOSFROM_HEAD 0   /* from the start */
+#define USER_FILECSRPOSFROM_HERE 1   /* from the cursor */
+#define USER_FILECSRPOSFROM_TAIL 2   /* from the end */
+
+#define USER_FILETYPE_NONE 0
+#define USER_FILETYPE_FILE 1
+#define USER_FILETYPE_DIR  2
+
+typedef struct _USER_FILEINFO {
+    WORD32 Type;        /* USER_FILETYPE_* */
+    WORD32 Flags;       /* USER_ATTR_* */
+    WORD64 Size;
+    WORD64 Created;     /* seconds since 1970, machine time; 0 if never recorded */
+    WORD64 Modified;
+    WORD32 Owner;       /* reserved */
+    WORD32 Mode;        /* reserved */
+    WORD32 Frame;       /* reserved */
+    WORD32 Accessed;
+} USER_FILEINFO, *PUSER_FILEINFO;</code></pre>
+<p><strong>The two locks.</strong> A file marked read-only (<code>USER_ATTR_READONLY</code>) refuses every write. A file marked system (<code>USER_ATTR_SYSTEM</code>) is the machine's own: an application cannot write, delete or rename it. Neither is a permission, and <a href="#user_setattributes"><code>User_SetAttributes</code></a> is how either is taken off. A refused change sets <code>ERROR_ACCESS_DENIED</code>.</p>
+<h3 id="user_openfile">User_OpenFile</h3>
+<pre><code>HANDLE User_OpenFile(PSTR FilePath, WORD16 Permissions);</code></pre>
+<p>user.dll · export <code>User_OpenFile1</code> · SDK 10</p>
+<p>Opens a file, or a folder, by path. The cursor starts at zero.</p>
+<ul>
+<li><code>Permissions</code> — <code>USER_FILEACCESS_*</code> together. With <code>USER_FILEACCESS_CREATE</code> a file that is not there is made empty; without it, a missing file fails. Asking for <code>USER_FILEACCESS_WRITE</code> on a locked file fails here rather than at the first write.</li>
+<li><strong>Returns</strong> the handle, or <code>HANDLE_INVALID</code> with <code>ERROR_INVALID_PATH</code>, <code>ERROR_PATH_NOT_FOUND</code> or <code>ERROR_ACCESS_DENIED</code> set.</li>
+</ul>
+<p>Close it with <a href="#user_destroyhandle"><code>User_DestroyHandle</code></a>.</p>
+<h3 id="user_getfileinfo">User_GetFileInfo</h3>
+<pre><code>BOOL User_GetFileInfo(HANDLE File, PUSER_FILEINFO Out);</code></pre>
+<p>user.dll · export <code>User_GetFileInfo1</code> · SDK 10</p>
+<p>What a file is, apart from what is in it: its type, size, times and attributes. <strong>Returns</strong> <code>FALSE</code> for a bad handle or a <code>NULL</code> <code>Out</code>.</p>
+<h3 id="user_readfile">User_ReadFile</h3>
+<pre><code>WORD32 User_ReadFile(HANDLE File, PVOID Buffer, WORD32 BufferSize,
+                     WORD32 BytesToRead);</code></pre>
+<p>user.dll · export <code>User_ReadFile1</code> · SDK 10</p>
+<p>Reads from the cursor into <code>Buffer</code>, at most the smaller of <code>BytesToRead</code> and <code>BufferSize</code>, and moves the cursor by what it read. A run of reads walks the file.</p>
+<ul>
+<li><strong>Returns</strong> how many bytes were read, which is less than asked at the end of the file and zero past it; <code>0xFFFFFFFF</code> for a bad handle or a <code>NULL</code> buffer.</li>
+</ul>
+<h3 id="user_writefile">User_WriteFile</h3>
+<pre><code>WORD32 User_WriteFile(HANDLE File, PVOID Buffer, WORD32 BytesToWrite);</code></pre>
+<p>user.dll · export <code>User_WriteFile1</code> · SDK 10</p>
+<p>Writes at the cursor, extending the file if the cursor is at or past its end, and moves the cursor by what it wrote.</p>
+<ul>
+<li><strong>Returns</strong> how many bytes were written: zero for a locked file, with <code>ERROR_ACCESS_DENIED</code>; <code>0xFFFFFFFF</code> for a bad handle or a <code>NULL</code> buffer.</li>
+</ul>
+<h3 id="user_updatefilecursor2">User_UpdateFileCursor2</h3>
+<pre><code>WORD64 User_UpdateFileCursor2(HANDLE File, WORD8 CursorMode, WORD64 NewPos);</code></pre>
+<p>user.dll · export <code>User_UpdateFileCursor2</code> · SDK 10</p>
+<p>Moves the cursor: to <code>NewPos</code> from the start, by <code>NewPos</code> from where it is, or to <code>NewPos</code> past the end, by <code>CursorMode</code>. A position past the end is allowed, and is where a write extends the file.</p>
+<ul>
+<li><strong>Returns</strong> the new position, or <code>USER_FILECSR_ERROR</code> for a bad handle.</li>
+</ul>
+<h3 id="user_updatefilecursor">User_UpdateFileCursor</h3>
+<pre><code>WORD32 User_UpdateFileCursor(HANDLE File, WORD8 CursorMode, WORD32 NewPos);</code></pre>
+<p>user.dll · export <code>User_UpdateFileCursor1</code> · SDK 10</p>
+<p>The 32-bit form of <a href="#user_updatefilecursor2"><code>User_UpdateFileCursor2</code></a>. In the relative modes <code>NewPos</code> is signed, so a backward move is a negative number. <strong>Returns</strong> <code>0xFFFFFFFF</code> for a bad handle or a position past 4 GB.</p>
+<h3 id="user_getfilesize2">User_GetFileSize2</h3>
+<pre><code>WORD64 User_GetFileSize2(HANDLE File);</code></pre>
+<p>user.dll · export <code>User_GetFileSize2</code> · SDK 10</p>
+<p>The size of the file in bytes, or <code>USER_FILESIZE_ERROR</code> for a bad handle.</p>
+<h3 id="user_getfilesize">User_GetFileSize</h3>
+<pre><code>WORD32 User_GetFileSize(HANDLE File);</code></pre>
+<p>user.dll · export <code>User_GetFileSize1</code> · SDK 10</p>
+<p>The 32-bit form. <strong>Returns</strong> <code>0xFFFFFFFF</code> for a bad handle or a file of 4 GB or more.</p>
+<h3 id="user_truncatefile2">User_TruncateFile2</h3>
+<pre><code>BOOL User_TruncateFile2(HANDLE File, WORD64 Size);</code></pre>
+<p>user.dll · export <code>User_TruncateFile2</code> · SDK 10</p>
+<p>Sets the file's length, cutting it short or extending it. The cursor is not moved. <strong>Returns</strong> <code>FALSE</code> for a bad handle or a locked file.</p>
+<h3 id="user_truncatefile">User_TruncateFile</h3>
+<pre><code>BOOL User_TruncateFile(HANDLE File, WORD32 Size);</code></pre>
+<p>user.dll · export <code>User_TruncateFile1</code> · SDK 10</p>
+<p>The 32-bit form of <a href="#user_truncatefile2"><code>User_TruncateFile2</code></a>.</p>
+<h3 id="user_getfilename">User_GetFileName</h3>
+<pre><code>WORD32 User_GetFileName(HANDLE File, PSTR Buffer, WORD32 BufferSize);</code></pre>
+<p>user.dll · export <code>User_GetFileName1</code> · SDK 10</p>
+<p>The whole path of what a handle is open on, terminated, cut short to fit. <strong>Returns</strong> its length, 0 when the path could not be found, or <code>0xFFFFFFFF</code> for a bad handle or buffer.</p>
+<h3 id="user_deletefile">User_DeleteFile</h3>
+<pre><code>VOID User_DeleteFile(HANDLE File);</code></pre>
+<p>user.dll · export <code>User_DeleteFile1</code> · SDK 10</p>
+<p>Deletes the file a handle is open on, and gives the handle back whether or not the delete happened. Refused with <code>ERROR_ACCESS_DENIED</code> while another handle has the file open, or when it is locked.</p>
+<h3 id="user_deletepath">User_DeletePath</h3>
+<pre><code>BOOL User_DeletePath(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_DeletePath1</code> · SDK 10</p>
+<p>Deletes a file, or an empty folder, by path. <strong>Returns</strong> <code>FALSE</code> when there is nothing there, the path is locked, or a folder is not empty.</p>
+<h3 id="user_deletetree">User_DeleteTree</h3>
+<pre><code>BOOL User_DeleteTree(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_DeleteTree1</code> · SDK 10</p>
+<p>Deletes a path and everything under it. The whole tree is checked first, and if anything in it is locked nothing is deleted. Trees deeper than <code>USER_DELETETREE_MAXDEPTH</code> (16) are refused with <code>ERROR_INVALID_PATH</code>.</p>
+<h3 id="user_renamefile">User_RenameFile</h3>
+<pre><code>BOOL User_RenameFile(PSTR Path, PSTR NewPath);</code></pre>
+<p>user.dll · export <code>User_RenameFile1</code> · SDK 10</p>
+<p>Renames or moves a file or folder. A read-only file may be renamed, since none of it changes; a system file may not, and an existing system file is not renamed over either.</p>
+<h3 id="user_copyfile">User_CopyFile</h3>
+<pre><code>BOOL User_CopyFile(PSTR Path, PSTR NewPath);</code></pre>
+<p>user.dll · export <code>User_CopyFile1</code> · SDK 10</p>
+<p>Copies a file, replacing whatever is at <code>NewPath</code> unless that is locked. A folder is refused. Moved a block at a time, so any size of file costs the same memory.</p>
+<h3 id="user_validatefilepath">User_ValidateFilePath</h3>
+<pre><code>BOOL User_ValidateFilePath(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_ValidateFilePath1</code> · SDK 10</p>
+<p>Whether a path is well formed — it starts with <code>/</code>, it is shorter than 1024 characters, and it has no empty components (<code>//</code>) — without asking whether anything is there. One trailing <code>/</code> is allowed, and names a folder.</p>
+<hr>
+<h2 id="attributes">Attributes</h2>
+<pre><code>#define USER_ATTR_NONE     0x00
+#define USER_ATTR_READONLY 0x01
+#define USER_ATTR_HIDDEN   0x02
+#define USER_ATTR_SYSTEM   0x04
+
+#define USER_ATTRLOCKED(a)    /* read-only or system: refuses changes */
+#define USER_ATTRCONCEALED(a) /* hidden or system: left out of listings */</code></pre>
+<p>Hidden asks a listing not to show a file. System is read-only and hidden together, as an application sees it.</p>
+<h3 id="user_getattributes">User_GetAttributes</h3>
+<pre><code>WORD32 User_GetAttributes(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_GetAttributes1</code> · SDK 10</p>
+<p>What a path carries, or <code>USER_ATTR_NONE</code> when nothing is there.</p>
+<h3 id="user_setattributes">User_SetAttributes</h3>
+<pre><code>BOOL User_SetAttributes(PSTR Path, WORD32 Attributes);</code></pre>
+<p>user.dll · export <code>User_SetAttributes1</code> · SDK 10</p>
+<p>Replaces a path's attributes whole: read them, change the bit meant, write them back. Never refused for a lock, since this is what takes a lock off.</p>
+<hr>
+<h2 id="folders">Folders</h2>
+<h3 id="user_opendirectory">User_OpenDirectory</h3>
+<pre><code>HANDLE User_OpenDirectory(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_OpenDirectory1</code> · SDK 10</p>
+<p>Opens a folder to list it. <strong>Returns</strong> <code>HANDLE_INVALID</code> with <code>ERROR_PATH_NOT_FOUND</code>, or <code>ERROR_INVALID_PATH</code> when the path is a file.</p>
+<h3 id="user_readdirectory">User_ReadDirectory</h3>
+<pre><code>BOOL User_ReadDirectory(HANDLE Directory, WORD32 Index, PSTR NameOut,
+                        WORD32 NameMax, PWORD32 TypeOut);</code></pre>
+<p>user.dll · export <code>User_ReadDirectory1</code> · SDK 10</p>
+<p>One entry by position. Walk upward from zero until it answers <code>FALSE</code>.</p>
+<ul>
+<li><code>NameOut</code>, <code>NameMax</code> — receives the leaf name, terminated. <code>USER_NAMEMAX</code> (256) always fits.</li>
+<li><code>TypeOut</code> — receives a <code>USER_FILETYPE_*</code> when not <code>NULL</code>.</li>
+</ul>
+<pre><code>HANDLE Folder = User_OpenDirectory(&quot;/users/default/desktop&quot;);
+char Name[USER_NAMEMAX];
+WORD32 Type;
+
+for (WORD32 i = 0; User_ReadDirectory(Folder, i, Name, sizeof(Name), &amp;Type); i++)
+    ...;
+
+User_DestroyHandle(Folder);</code></pre>
+<h3 id="user_countdirectory">User_CountDirectory</h3>
+<pre><code>WORD32 User_CountDirectory(HANDLE Directory);</code></pre>
+<p>user.dll · export <code>User_CountDirectory1</code> · SDK 10</p>
+<p>How many entries a folder holds, or 0 for a bad handle.</p>
+<h3 id="user_createdirectory">User_CreateDirectory</h3>
+<pre><code>BOOL User_CreateDirectory(PSTR Path);</code></pre>
+<p>user.dll · export <code>User_CreateDirectory1</code> · SDK 10</p>
+<p>Makes a folder. The folder above it must already be there.</p>
+<h3 id="user_flushfilesystem">User_FlushFileSystem</h3>
+<pre><code>VOID User_FlushFileSystem(VOID);</code></pre>
+<p>user.dll · export <code>User_FlushFileSystem1</code> · SDK 10</p>
+<p>Writes out anything the volume is holding back. The system flushes on its own; this is for before something that will not come back.</p>
+<h3 id="user_getvolumespace">User_GetVolumeSpace</h3>
+<pre><code>BOOL User_GetVolumeSpace(PSTR Path, PWORD64 Total, PWORD64 Free);</code></pre>
+<p>user.dll · export <code>User_GetVolumeSpace1</code> · SDK 10</p>
+<p>The size of the volume a path is on and how much of it is free, in bytes. <code>&quot;/&quot;</code> names the volume the machine started from. Both outputs are zeroed first, and stay zero when it answers <code>FALSE</code>.</p>
+<hr>
+<h2 id="names-as-they-are-shown">Names as they are shown</h2>
+<h3 id="user_hideextensions">User_HideExtensions</h3>
+<pre><code>BOOL User_HideExtensions(VOID);</code></pre>
+<p>user.dll · export <code>User_HideExtensions1</code> · SDK 10</p>
+<p>Whether Folder Options asks for extensions to be left off in listings. Read from the registry each time, so ask while building a list, not while painting one.</p>
+<h3 id="user_displayname">User_DisplayName</h3>
+<pre><code>VOID User_DisplayName(PSTR Name, BOOL IsDirectory, PSTR Out, WORD32 Size);</code></pre>
+<p>user.dll · export <code>User_DisplayName1</code> · SDK 10</p>
+<p>One leaf name as somebody should see it. The extension comes off when Folder Options says so — never from a folder, and never when the dot is the first character, so <code>.config</code> keeps its name. A link's <code>.bal</code> always comes off.</p>
+<hr>
+<h2 id="sound">Sound</h2>
+<p>A sound is a resource, played by name; it is short, resident, and finishes on its own, so there is nothing to hold or free. The system's own are <code>Sound_Startup</code>, <code>Sound_Shutdown</code>, <code>Sound_Error</code> and <code>Sound_Notification</code>. An application plays one of its own by carrying it (<a href="../guide/project-file.html#sounds"><code>[sounds]</code> in app.ini</a>) and registering it once with <a href="modres.html#user_registersound"><code>User_RegisterSound</code></a>.</p>
+<h3 id="user_playsound">User_PlaySound</h3>
+<pre><code>BOOL User_PlaySound(PSTR Name);</code></pre>
+<p>user.dll · export <code>User_PlaySound1</code> · SDK 10</p>
+<p>Plays a registered sound. <strong>Returns</strong> <code>FALSE</code> when there is no sound device, nothing registered under the name, or every voice is busy; none of the three is worth acting on.</p>
+<h3 id="user_soundready">User_SoundReady</h3>
+<pre><code>BOOL User_SoundReady(VOID);</code></pre>
+<p>user.dll · export <code>User_SoundReady1</code> · SDK 10</p>
+<p>Whether there is a sound device, for an application that would rather leave out a control than offer one that does nothing.</p>
+<hr>
+<h2 id="the-systems-version">The system's version</h2>
+<p>Each answers with a string the system owns, which stays valid and must not be written or freed.</p>
+<h3 id="userversion_getname">UserVersion_GetName</h3>
+<pre><code>PSTR UserVersion_GetName(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetName1</code> · SDK 10</p>
+<p>The system's name: <code>&quot;BoltOS&quot;</code>.</p>
+<h3 id="userversion_getproductname">UserVersion_GetProductName</h3>
+<pre><code>PSTR UserVersion_GetProductName(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetProductName1</code> · SDK 10</p>
+<p>The product name as the desktop shows it, with the release stage: <code>&quot;N. B. Wooten(R) BoltOS(TM) Beta 1&quot;</code>.</p>
+<h3 id="userversion_getbuildstring">UserVersion_GetBuildString</h3>
+<pre><code>PSTR UserVersion_GetBuildString(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetBuildString1</code> · SDK 10</p>
+<p>The whole build string, as in <code>BoltOS 2.0 Build 415.0.sdkv10.261003-2100</code>.</p>
+<h3 id="userversion_getbranchstring">UserVersion_GetBranchString</h3>
+<pre><code>PSTR UserVersion_GetBranchString(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetBranchString1</code> · SDK 10</p>
+<p>The branch the build came from: <code>&quot;sdkv10&quot;</code>.</p>
+<h3 id="userversion_getcopyright">UserVersion_GetCopyright</h3>
+<pre><code>PSTR UserVersion_GetCopyright(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetCopyright1</code> · SDK 10</p>
+<p>The system's copyright line: <code>&quot;Copyright (c) 2023-2026 Noah Wooten&quot;</code>.</p>
+<h3 id="userversion_getshortversion">UserVersion_GetShortVersion</h3>
+<pre><code>PSTR UserVersion_GetShortVersion(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetShortVersion1</code> · SDK 10</p>
+<p>The version with the build number: <code>&quot;Version 2.0 (Build 415)&quot;</code>. A Debug build of the system adds the revision, the branch and <code>(Checked / Debug)</code>.</p>
+<h3 id="userversion_getsupershortversion">UserVersion_GetSuperShortVersion</h3>
+<pre><code>PSTR UserVersion_GetSuperShortVersion(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetSuperShortVersion1</code> · SDK 10</p>
+<p>The shortest form of the version, for a narrow place: <code>&quot;Version 2.0&quot;</code>.</p>
+<h3 id="userversion_getmajor">UserVersion_GetMajor</h3>
+<pre><code>WORD32 UserVersion_GetMajor(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetMajor1</code> · SDK 10</p>
+<p>The major version: 2.</p>
+<h3 id="userversion_getminor">UserVersion_GetMinor</h3>
+<pre><code>WORD32 UserVersion_GetMinor(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetMinor1</code> · SDK 10</p>
+<p>The minor version: 0.</p>
+<h3 id="userversion_getbuild">UserVersion_GetBuild</h3>
+<pre><code>WORD32 UserVersion_GetBuild(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetBuild1</code> · SDK 10</p>
+<p>The build number: 415 for the system this SDK targets.</p>
+<h3 id="userversion_getrevision">UserVersion_GetRevision</h3>
+<pre><code>WORD32 UserVersion_GetRevision(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetRevision1</code> · SDK 10</p>
+<p>The revision within the build.</p>
+<h3 id="userversion_getdate">UserVersion_GetDate</h3>
+<pre><code>WORD32 UserVersion_GetDate(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetDate1</code> · SDK 10</p>
+<p>The day it was built, as a number written <code>YYMMDD</code>: 261003 is 3 October 2026.</p>
+<h3 id="userversion_gettime">UserVersion_GetTime</h3>
+<pre><code>WORD32 UserVersion_GetTime(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetTime1</code> · SDK 10</p>
+<p>The time of day it was built, as <code>HHMM</code>.</p>
+<h3 id="userversion_getsku">UserVersion_GetSku</h3>
+<pre><code>PSTR UserVersion_GetSku(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetSku1</code> · SDK 10</p>
+<p>The edition: <code>&quot;ClientSku&quot;</code> for every build this SDK targets.</p>
+<h3 id="userversion_getarch">UserVersion_GetArch</h3>
+<pre><code>PSTR UserVersion_GetArch(VOID);</code></pre>
+<p>user.dll · export <code>UserVersion_GetArch1</code> · SDK 10</p>
+<p>The processor architecture the system was built for: <code>&quot;x64native&quot;</code>.</p>
+<p>To know which SDK the system provides, compare against <code>BOLTSDK_APIV_LATEST</code> at build time; an application never runs on a system older than the SDK it names, since the system refuses it.</p>
+<hr>
+<h2 id="miscellaneous">Miscellaneous</h2>
+<h3 id="user_getlasterror">User_GetLastError</h3>
+<pre><code>WORD32 User_GetLastError(VOID);</code></pre>
+<p>user.dll · export <code>User_GetLastError1</code> · SDK 10</p>
+<p>Why the last call that failed failed: an <code>ERROR_*</code> code. Not cleared by a call that succeeds, so read it straight after the failure it explains.</p>
+<h3 id="user_insecurehashstring">User_InsecureHashString</h3>
+<pre><code>WORD32 User_InsecureHashString(PSTR Str);</code></pre>
+<p>user.dll · export <code>User_InsecureHashString1</code> · SDK 10</p>
+<p>A 32-bit hash of a string (djb2). Fast and stable from one build to the next, and good for a table; not for anything that has to resist somebody choosing the input.</p>
+<hr>
+<h2 id="services">Services</h2>
+<p>A service is a set of callbacks a module registers to be run on the system's clock whether or not any window is open — the clock application's alarm is one. An application describes its services with <code>MODRES_RSRCTYPE_SERVICE</code> resources (<code>RSRCTYPE_SERVICE</code> in user.h). These calls find and control the services that are registered.</p>
+<pre><code>#define SVCSTATE_ERROR   0
+#define SVCSTATE_PAUSED  1
+#define SVCSTATE_STOPPED 2
+#define SVCSTATE_FAILURE 3
+#define SVCSTATE_RUNNING 4</code></pre>
+<h3 id="userservice_getcount">UserService_GetCount</h3>
+<pre><code>WORD32 UserService_GetCount(VOID);</code></pre>
+<p>user.dll · export <code>UserService_GetCount1</code> · SDK 10</p>
+<p>How many services are registered. Identifiers are table positions and the table may have gaps, so walk with <a href="#userservice_getname"><code>UserService_GetName</code></a> up to 64.</p>
+<h3 id="userservice_getname">UserService_GetName</h3>
+<pre><code>PSTR UserService_GetName(WORD32 Id);</code></pre>
+<p>user.dll · export <code>UserService_GetName1</code> · SDK 10</p>
+<p>The name of the service at a position, an empty string for an empty slot, or <code>NULL</code> past the end. The string is the system's.</p>
+<h3 id="userservice_getbyid">UserService_GetById</h3>
+<pre><code>HANDLE UserService_GetById(WORD32 Id);</code></pre>
+<p>user.dll · export <code>UserService_GetById1</code> · SDK 10</p>
+<p>A handle to the service at a position, or <code>HANDLE_INVALID</code> with <code>ERROR_INVALID_SVC_ID</code>.</p>
+<h3 id="userservice_getbyname">UserService_GetByName</h3>
+<pre><code>HANDLE UserService_GetByName(PSTR Name);</code></pre>
+<p>user.dll · export <code>UserService_GetByName1</code> · SDK 10</p>
+<p>A handle to the service with this name, or <code>HANDLE_INVALID</code> with <code>ERROR_INVALID_SVC_NAME</code>.</p>
+<h3 id="userservice_start">UserService_Start</h3>
+<pre><code>VOID UserService_Start(HANDLE Service);</code></pre>
+<p>user.dll · export <code>UserService_Start1</code> · SDK 10</p>
+<p>Starts a stopped service, running its initialisation, or lets a paused one go on. Sets <code>ERROR_SVC_ALREADY_RUN</code> when it is running already.</p>
+<h3 id="userservice_stop">UserService_Stop</h3>
+<pre><code>VOID UserService_Stop(HANDLE Service);</code></pre>
+<p>user.dll · export <code>UserService_Stop1</code> · SDK 10</p>
+<p>Stops a running or paused service, running its shutdown once. Sets <code>ERROR_SVC_ALREADY_STOP</code> when it is stopped already.</p>
+<h3 id="userservice_pause">UserService_Pause</h3>
+<pre><code>VOID UserService_Pause(HANDLE Service);</code></pre>
+<p>user.dll · export <code>UserService_Pause1</code> · SDK 10</p>
+<p>Holds a running service: its clock is not called until it is started again. Sets <code>ERROR_SVC_ALREADY_STOP</code> for a stopped one and <code>ERROR_SVC_ALREADY_PAUSE</code> for a paused one.</p>
+<h3 id="userservice_getstate">UserService_GetState</h3>
+<pre><code>BOOL UserService_GetState(HANDLE Service);</code></pre>
+<p>user.dll · export <code>UserService_GetState1</code> · SDK 10</p>
+<p>What a service is doing: <code>SVCSTATE_RUNNING</code>, <code>SVCSTATE_PAUSED</code>, <code>SVCSTATE_STOPPED</code>, or <code>SVCSTATE_ERROR</code> for a bad handle. Declared <code>BOOL</code>, and answers one of those values.</p>
+<h3 id="userservice_setstartupstate">UserService_SetStartupState</h3>
+<pre><code>VOID UserService_SetStartupState(HANDLE Service, BOOL State);</code></pre>
+<p>user.dll · export <code>UserService_SetStartupState1</code> · SDK 10</p>
+<p>Whether a service starts with the machine. Recorded in the registry. Only the shell and System Control may change it: from an application's own code it does nothing.</p>
+<hr>
+<h2 id="the-command-line">The command line</h2>
+<p>A session is a conversation with the same command line telnet and the Terminal application use. Output is collected rather than pushed, so an application drains it on its own clock.</p>
+<pre><code>#define USERCONSOLE_CLOSE 0x01   /* the session is finished */
+#define USERCONSOLE_CLEAR 0x02   /* clear the screen */</code></pre>
+<h3 id="userconsole_open">UserConsole_Open</h3>
+<pre><code>HANDLE UserConsole_Open(VOID);</code></pre>
+<p>user.dll · export <code>UserConsole_Open1</code> · SDK 10</p>
+<p>Starts a session. <strong>Returns</strong> its handle, or <code>HANDLE_INVALID</code> with <code>ERROR_OUT_OF_RESOURCES</code>.</p>
+<h3 id="userconsole_close">UserConsole_Close</h3>
+<pre><code>VOID UserConsole_Close(HANDLE Console);</code></pre>
+<p>user.dll · export <code>UserConsole_Close1</code> · SDK 10</p>
+<p>Ends a session and gives the handle back.</p>
+<h3 id="userconsole_submit">UserConsole_Submit</h3>
+<pre><code>VOID UserConsole_Submit(HANDLE Console, PSTR Line);</code></pre>
+<p>user.dll · export <code>UserConsole_Submit1</code> · SDK 10</p>
+<p>Runs one line, as though it had been typed and Return pressed. What it produces is read with <a href="#userconsole_collect"><code>UserConsole_Collect</code></a>, which may take more than one call and more than one frame.</p>
+<h3 id="userconsole_collect">UserConsole_Collect</h3>
+<pre><code>WORD32 UserConsole_Collect(HANDLE Console, PSTR Buffer, WORD32 Capacity);</code></pre>
+<p>user.dll · export <code>UserConsole_Collect1</code> · SDK 10</p>
+<p>Takes what the session has produced since the last call. <strong>Returns</strong> how many bytes, which may be zero. The buffer is not terminated.</p>
+<h3 id="userconsole_busy">UserConsole_Busy</h3>
+<pre><code>BOOL UserConsole_Busy(HANDLE Console);</code></pre>
+<p>user.dll · export <code>UserConsole_Busy1</code> · SDK 10</p>
+<p>Whether the last line is still being answered. A command that waits on the network finishes in a later frame than the one that started it.</p>
+<h3 id="userconsole_takeflags">UserConsole_TakeFlags</h3>
+<pre><code>WORD32 UserConsole_TakeFlags(HANDLE Console);</code></pre>
+<p>user.dll · export <code>UserConsole_TakeFlags1</code> · SDK 10</p>
+<p>What a command asked of whoever shows the session — <code>USERCONSOLE_CLEAR</code>, <code>USERCONSOLE_CLOSE</code> — read once and cleared.</p>
+<h3 id="userconsole_prompt">UserConsole_Prompt</h3>
+<pre><code>PSTR UserConsole_Prompt(VOID);</code></pre>
+<p>user.dll · export <code>UserConsole_Prompt1</code> · SDK 10</p>
+<p>The prompt every front end draws before a line. The string is the system's.</p>
+<h3 id="userconsole_banner">UserConsole_Banner</h3>
+<pre><code>PSTR UserConsole_Banner(VOID);</code></pre>
+<p>user.dll · export <code>UserConsole_Banner1</code> · SDK 10</p>
+<p>The greeting a session opens with. The string is the system's.</p>
+</main>
+</body>
+</html>

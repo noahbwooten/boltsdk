@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>registry.h — the registry</title>
+<style>
+:root { --bg: #ffffff; --fg: #1d1f23; --muted: #5d636e; --line: #d9dce1;
+        --code: #f3f4f6; --link: #0b57d0; --accent: #8b1a1a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e3e5e8; --muted: #9aa0aa; --line: #30343b;
+          --code: #22252b; --link: #8ab4f8; --accent: #e06c6c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { border-bottom: 1px solid var(--line); padding: 10px 16px;
+         font-size: 14px; color: var(--muted); }
+header a { margin-right: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: 8px 16px 64px; }
+h1, h2, h3, h4 { line-height: 1.3; margin: 1.6em 0 0.5em; }
+h1 { font-size: 2em; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h2 { font-size: 1.45em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.15em; font-family: ui-monospace, Consolas, monospace; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em;
+       background: var(--code); padding: 1px 4px; border-radius: 3px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 6px;
+      overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; display: block;
+        overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left;
+         vertical-align: top; }
+th { background: var(--code); }
+blockquote { margin: 1em 0; padding: 4px 14px; border-left: 4px solid var(--accent);
+             color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+<header><a href="../../README.html">Bolt SDK</a><a href="../../docs/index.html">Documentation</a><a href="../../docs/api/index.html">API reference</a></header>
+<main>
+<h1 id="registryh-the-registry">registry.h — the registry</h1>
+<p><code>#include &lt;registry.h&gt;</code> · exported by <strong>user.dll</strong> · link <strong><code>user.lib</code></strong></p>
+<p>The registry is a tree of keys holding typed values, kept on the volume and written back on the system's own clock. It is where the system keeps its settings and where an application keeps its preferences.</p>
+<h2 id="hives">Hives</h2>
+<pre><code>#define REGHIVE_LOCALMACHINE       0   /* what the machine is */
+#define REGHIVE_LOCALCONFIGURATION 1   /* what the user chose */</code></pre>
+<p><code>REGHIVE_LOCALCONFIGURATION</code> is an application's to read and write: a preference is the application's own. Keep yours under a key named for the application, such as <code>Applications/MyApp</code>.</p>
+<p><code>REGHIVE_LOCALMACHINE</code> is the machine's. An application may read it and should treat it as read-only: a write from an application's entry point or clock is refused with <code>ERROR_ACCESS_DENIED</code>, and a later system may refuse it everywhere. An installed package may write values under <code>Software/&lt;appid&gt;</code> as it is installed; see <a href="../guide/packaging.html#registry-values">Packaging</a>.</p>
+<h2 id="paths-names-and-types">Paths, names and types</h2>
+<p>A path is keys separated by <code>/</code>, matched without regard to case, with an optional leading slash: <code>Shell/Time</code> and <code>/shell/time</code> are one key. A name picks one value within a key.</p>
+<pre><code>#define REGTYPE_KEY     0   /* a key, when enumerating */
+#define REGTYPE_STRING  1
+#define REGTYPE_QWORD   2   /* 64 bits */
+#define REGTYPE_DWORD   3   /* 32 bits */
+#define REGTYPE_WORD    4   /* 16 bits */
+#define REGTYPE_BOOLEAN 5   /* 8 bits, zero or not */
+#define REGTYPE_BINARY  6   /* reserved */
+
+#define REG_NAMEMAX   64    /* a key or value name, with its terminator */
+#define REG_STRINGMAX 256   /* a string value, with its terminator */
+#define REG_PATHMAX   512</code></pre>
+<p>A string longer than <code>REG_STRINGMAX - 1</code> is cut short when it is written.</p>
+<hr>
+<h2 id="reading">Reading</h2>
+<p>Each answers <code>TRUE</code> when the value is there and has the type asked for, and leaves the output untouched otherwise. So the usual form seeds the output with its default and reads over it:</p>
+<pre><code>WORD32 Size = 12;                       /* the default */
+UserReg_QueryDword(REGHIVE_LOCALCONFIGURATION, &quot;Applications/MyApp&quot;,
+                   &quot;FontSize&quot;, &amp;Size);</code></pre>
+<h3 id="userreg_querystring">UserReg_QueryString</h3>
+<pre><code>BOOL UserReg_QueryString(WORD32 Hive, PSTR Path, PSTR Name, PSTR Buffer,
+                         WORD32 BufferSize);</code></pre>
+<p>user.dll · export <code>UserReg_QueryString1</code> · SDK 10</p>
+<p>A string value, copied into <code>Buffer</code> and terminated, cut short to fit.</p>
+<h3 id="userreg_queryqword">UserReg_QueryQword</h3>
+<pre><code>BOOL UserReg_QueryQword(WORD32 Hive, PSTR Path, PSTR Name, WORD64* Out);</code></pre>
+<p>user.dll · export <code>UserReg_QueryQword1</code> · SDK 10</p>
+<p>A 64-bit value.</p>
+<h3 id="userreg_querydword">UserReg_QueryDword</h3>
+<pre><code>BOOL UserReg_QueryDword(WORD32 Hive, PSTR Path, PSTR Name, WORD32* Out);</code></pre>
+<p>user.dll · export <code>UserReg_QueryDword1</code> · SDK 10</p>
+<p>A 32-bit value.</p>
+<h3 id="userreg_queryword">UserReg_QueryWord</h3>
+<pre><code>BOOL UserReg_QueryWord(WORD32 Hive, PSTR Path, PSTR Name, WORD16* Out);</code></pre>
+<p>user.dll · export <code>UserReg_QueryWord1</code> · SDK 10</p>
+<p>A 16-bit value.</p>
+<h3 id="userreg_queryboolean">UserReg_QueryBoolean</h3>
+<pre><code>BOOL UserReg_QueryBoolean(WORD32 Hive, PSTR Path, PSTR Name, WORD8* Out);</code></pre>
+<p>user.dll · export <code>UserReg_QueryBoolean1</code> · SDK 10</p>
+<p>A boolean, as a byte that is zero or not.</p>
+<hr>
+<h2 id="writing">Writing</h2>
+<p>Each writes one value, making the key and every key above it if they are missing, and replacing a value of another type under the same name. <strong>Returns</strong> <code>TRUE</code> when the value is now what was asked for; <code>FALSE</code> with <code>ERROR_ACCESS_DENIED</code> for a hive the caller may not write.</p>
+<h3 id="userreg_setstring">UserReg_SetString</h3>
+<pre><code>BOOL UserReg_SetString(WORD32 Hive, PSTR Path, PSTR Name, PSTR Value);</code></pre>
+<p>user.dll · export <code>UserReg_SetString1</code> · SDK 10</p>
+<h3 id="userreg_setqword">UserReg_SetQword</h3>
+<pre><code>BOOL UserReg_SetQword(WORD32 Hive, PSTR Path, PSTR Name, WORD64 Value);</code></pre>
+<p>user.dll · export <code>UserReg_SetQword1</code> · SDK 10</p>
+<h3 id="userreg_setdword">UserReg_SetDword</h3>
+<pre><code>BOOL UserReg_SetDword(WORD32 Hive, PSTR Path, PSTR Name, WORD32 Value);</code></pre>
+<p>user.dll · export <code>UserReg_SetDword1</code> · SDK 10</p>
+<h3 id="userreg_setword">UserReg_SetWord</h3>
+<pre><code>BOOL UserReg_SetWord(WORD32 Hive, PSTR Path, PSTR Name, WORD16 Value);</code></pre>
+<p>user.dll · export <code>UserReg_SetWord1</code> · SDK 10</p>
+<h3 id="userreg_setboolean">UserReg_SetBoolean</h3>
+<pre><code>BOOL UserReg_SetBoolean(WORD32 Hive, PSTR Path, PSTR Name, WORD8 Value);</code></pre>
+<p>user.dll · export <code>UserReg_SetBoolean1</code> · SDK 10</p>
+<hr>
+<h2 id="keys">Keys</h2>
+<h3 id="userreg_createkey">UserReg_CreateKey</h3>
+<pre><code>BOOL UserReg_CreateKey(WORD32 Hive, PSTR Path);</code></pre>
+<p>user.dll · export <code>UserReg_CreateKey1</code> · SDK 10</p>
+<p>Makes a key and every key on the way to it. <code>TRUE</code> if it is there afterwards, including when it already was.</p>
+<h3 id="userreg_keyexists">UserReg_KeyExists</h3>
+<pre><code>BOOL UserReg_KeyExists(WORD32 Hive, PSTR Path);</code></pre>
+<p>user.dll · export <code>UserReg_KeyExists1</code> · SDK 10</p>
+<p>Whether a key is there, without making it.</p>
+<h3 id="userreg_deletekey">UserReg_DeleteKey</h3>
+<pre><code>BOOL UserReg_DeleteKey(WORD32 Hive, PSTR Path);</code></pre>
+<p>user.dll · export <code>UserReg_DeleteKey1</code> · SDK 10</p>
+<p>Removes a key and everything under it. A hive's root cannot be deleted.</p>
+<h3 id="userreg_deletevalue">UserReg_DeleteValue</h3>
+<pre><code>BOOL UserReg_DeleteValue(WORD32 Hive, PSTR Path, PSTR Name);</code></pre>
+<p>user.dll · export <code>UserReg_DeleteValue1</code> · SDK 10</p>
+<p>Removes one value from a key.</p>
+<h3 id="userreg_renamekey">UserReg_RenameKey</h3>
+<pre><code>BOOL UserReg_RenameKey(WORD32 Hive, PSTR Path, PSTR NewName);</code></pre>
+<p>user.dll · export <code>UserReg_RenameKey1</code> · SDK 10</p>
+<p>Gives the key at <code>Path</code> a new last component, keeping everything under it and its place among its siblings. <code>NewName</code> is a name, not a path. <strong>Returns</strong> <code>FALSE</code> when a sibling already has the name.</p>
+<h3 id="userreg_renamevalue">UserReg_RenameValue</h3>
+<pre><code>BOOL UserReg_RenameValue(WORD32 Hive, PSTR Path, PSTR Name, PSTR NewName);</code></pre>
+<p>user.dll · export <code>UserReg_RenameValue1</code> · SDK 10</p>
+<p>Renames one value in place. <code>FALSE</code> when the key already has a value called <code>NewName</code>.</p>
+<hr>
+<h2 id="walking">Walking</h2>
+<p>Enumeration is by position rather than by a cursor, so nothing is opened or closed and stopping early leaves nothing behind.</p>
+<h3 id="userreg_childcount">UserReg_ChildCount</h3>
+<pre><code>WORD32 UserReg_ChildCount(WORD32 Hive, PSTR Path);</code></pre>
+<p>user.dll · export <code>UserReg_ChildCount1</code> · SDK 10</p>
+<p>How many keys and values a key holds together, or 0 when it is not there.</p>
+<h3 id="userreg_enumerate">UserReg_Enumerate</h3>
+<pre><code>BOOL UserReg_Enumerate(WORD32 Hive, PSTR Path, WORD32 Index, PSTR NameBuffer,
+                       WORD32 NameBufferSize, WORD32* Type);</code></pre>
+<p>user.dll · export <code>UserReg_Enumerate1</code> · SDK 10</p>
+<p>One child of a key by position: its name, and in <code>*Type</code> what it is — <code>REGTYPE_KEY</code> for a key, otherwise the value's type. <strong>Returns</strong> <code>FALSE</code> past the last child.</p>
+<pre><code>char Name[REG_NAMEMAX];
+WORD32 Type;
+
+for (WORD32 i = 0; UserReg_Enumerate(REGHIVE_LOCALCONFIGURATION,
+        &quot;Applications/MyApp&quot;, i, Name, sizeof(Name), &amp;Type); i++)
+    ...;</code></pre>
+<h3 id="userreg_flush">UserReg_Flush</h3>
+<pre><code>VOID UserReg_Flush(VOID);</code></pre>
+<p>user.dll · export <code>UserReg_Flush1</code> · SDK 10</p>
+<p>Writes both hives out now rather than on the next tick. Wanted before something that will not come back, and not otherwise.</p>
+</main>
+</body>
+</html>
