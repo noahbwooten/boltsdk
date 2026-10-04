@@ -1,0 +1,23 @@
+LIBRARY cmnctl.dll
+EXPORTS
+    CmnCtl_ClockTextInputML1
+    CmnCtl_CreateGraph1
+    CmnCtl_CreateTabController1
+    CmnCtl_DestroyGraph1
+    CmnCtl_DestroyTabController1
+    CmnCtl_DrawButton1
+    CmnCtl_DrawCheckbox1
+    CmnCtl_DrawComboBox1
+    CmnCtl_DrawDropItem1
+    CmnCtl_DrawDropItemSelectable1
+    CmnCtl_DrawDropMenu1
+    CmnCtl_DrawGraph1
+    CmnCtl_DrawIntInput1
+    CmnCtl_DrawMeter1
+    CmnCtl_DrawTab1
+    CmnCtl_DrawTabController1
+    CmnCtl_DrawTextInput1
+    CmnCtl_DrawTextInputML1
+    CmnCtl_EndTabHandler1
+    CmnCtl_GetColors1
+    CmnCtl_PushGraphSample1

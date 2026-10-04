@@ -1,0 +1,13 @@
+LIBRARY netapi.dll
+EXPORTS
+    NetApi_Close1
+    NetApi_LocalAddress1
+    NetApi_Open1
+    NetApi_OpenTelnet1
+    NetApi_ParseAddress1
+    NetApi_Pending1
+    NetApi_Present1
+    NetApi_Receive1
+    NetApi_Send1
+    NetApi_ServerEchoes1
+    NetApi_State1

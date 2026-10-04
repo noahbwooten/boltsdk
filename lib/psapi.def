@@ -1,0 +1,15 @@
+LIBRARY psapi.dll
+EXPORTS
+    Ps_CreateProcess1
+    Ps_FindProcessByBase1
+    Ps_GetCurrentProcess1
+    Ps_GetProcessBase1
+    Ps_GetProcessMax1
+    Ps_GetProcessPath1
+    Ps_IsApplication1
+    Ps_IsProcess1
+    Ps_IsSuspended1
+    Ps_KillProcess1
+    Ps_ResumeProcess1
+    Ps_StartProcess1
+    Ps_SuspendProcess1
