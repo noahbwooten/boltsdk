@@ -1,8 +1,5 @@
 # Bolt SDK 10
 
-**For development and evaluation purposes only.**
-(c) Noah Wooten 2023-2026, All Rights Reserved.
-
 Everything needed to write applications for BoltOS: the headers and libraries
 of the Bolt API, the tools that build, package and install an application, a
 BoltOS machine to run it on, two example applications, and the documentation.
